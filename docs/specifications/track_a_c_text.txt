@@ -1,0 +1,2727 @@
+HEALTHHEART | LEADLESSGUARD 
+
+Track A & C Beginner-to-Research Master Manual
+
+A practical guide to building a free prototype and developing a responsible cardiac-risk research engine
+
+Prepared 10 October 2026  |  India-focused regulatory and research context
+
+READ THIS FIRST
+
+This document is a technical learning and research plan. A prototype built with synthetic or public ECG data is not a validated patient monitor. patient-facing clinical claims require appropriate clinical, security and regulatory review.
+
+How to use this guide
+
+This guide assumes you are starting from zero in programming, synthetic-data handling and ECG machine learning. Focus on building the prototype and developing the research engine.
+
+The two workstreams
+
+Workstream
+
+What you build
+
+What “done” means
+
+A — Free prototype
+
+Local dashboard; synthetic observations; public ECG import; research classifier; tests.
+
+A repeatable demonstration that never mislabels simulated data as real implant data.
+
+C — Risk research
+
+Data-quality gates; trend analysis; explainable flags; model evaluation; safety documentation.
+
+Documented performance on appropriate held-out data and clearly bounded research claims.
+
+Contents
+
+1. Foundations: what a leadless pacemaker can and cannot provide
+
+2. System architecture and data fields
+
+3. Track A: build the free prototype from zero
+
+4. Public ECG data: import, inspect and evaluate
+
+6. Track C: develop early-warning research safely
+
+7. Validation, privacy, cybersecurity and Indian regulatory considerations
+
+8. A 90-day execution schedule
+
+9. Checklists, decision gates and starter code
+
+10. Official references and source-verification notes
+
+Recommended order
+
+First build the synthetic-data dashboard. Add the public ECG workflow next. Do not represent a simulation as connected to an implant.
+
+1. Foundations: understand the device before coding
+
+1.1 What is a leadless pacemaker?
+
+A leadless pacemaker is a small implant placed inside a heart chamber, generally delivered through a catheter via a blood vessel. Unlike a conventional pacemaker, it has no separate pulse generator under the chest skin and no electrical leads running from that generator to the heart. It senses cardiac electrical activity and delivers pacing therapy for the conditions it is designed to treat.
+
+1.2 Key terms that must not be confused
+
+Term
+
+Plain-language meaning
+
+What it means for your app
+
+Heart-rate measurement or trend
+
+A rate value or summary over some time period.
+
+Can be charted if the source sends a valid measurement and timestamp.
+
+ECG / electrogram waveform
+
+A sampled electrical signal from the heart; a surface ECG and an implant electrogram are not automatically equivalent.
+
+Requires waveform data, sampling information and signal interpretation that match the model.
+
+Prediction of a future clinical event
+
+A model estimates future risk over a defined time horizon, based on validated predictors and outcomes.
+
+Requires a suitable labelled dataset and independent clinical validation; heart rate alone is insufficient.
+
+1.3 What your app is trying to achieve
+
+Show available heart-rate and device information in a clear, time-stamped dashboard.
+
+Analyze suitable ECG waveforms or documented rhythm events, if those data are available.
+
+Identify unusual changes and generate explainable research flags for clinician review.
+
+Ultimately investigate early warning for a specific defined outcome, but only after suitable data and clinical validation exist.
+
+Scope boundary
+
+A pacemaker monitors and treats specific rhythm problems; it is not a complete cardiovascular sensor. An app cannot infer every heart attack, heart-failure episode or cardiac emergency from a rate number alone.
+
+2. System architecture: keep data sources separate from analysis
+
+The core design choice is to keep the data source separate from the analysis. Every observation—simulated or public ECG—must carry a source label. A single analysis engine may accept several data sources only after each source has been converted into a documented common format.
+
+2.1 A common data record
+
+A common schema keeps the dashboard separate from source-specific details. Use only fields actually available from the source. Missing information must be represented as unavailable—not zero, not “normal,” and not inferred from an unrelated field.
+
+{
+
+  "patient_key": "DEMO-001", "observed_at": "2026-10-10T10:00:00Z",
+
+  "source_type": "simulation", "device_family": "unknown",
+
+  "signal_type": "heart_rate_trend", "heart_rate_bpm": null,
+
+  "rhythm_event": null, "pacing_percent": null,
+
+  "battery_status": null, "data_quality": "valid",
+
+  "is_simulated": true
+
+}
+
+2.3 Recommended software architecture
+
+Source adapters: simulator and public ECG reader.
+
+Normalization: convert timestamps, units, event definitions and provenance into the common schema.
+
+Quality gate: check missing values, duplicates, stale transmissions, time-zone problems and unexpected units.
+
+Analysis: compute descriptive trends and run separately validated research models.
+
+Presentation: show the original source, last observation time, uncertainty and reason for each research flag.
+
+3. Track A — build a free working prototype from zero
+
+3.1 What to install
+
+Tool
+
+Purpose
+
+Cost / starting point
+
+Python
+
+Language for app and analysis.
+
+Free; install a stable release from python.org.
+
+Visual Studio Code
+
+Editor for files and terminal.
+
+Free; official code.visualstudio.com.
+
+Git
+
+Version control and backup of source history.
+
+Free; git-scm.com.
+
+Streamlit
+
+Quick local dashboard.
+
+Open-source package; runs locally.
+
+Pandas / NumPy
+
+Tables and numeric work.
+
+Open-source packages.
+
+Plotly / Matplotlib
+
+Interactive charts and static figures.
+
+Open-source packages.
+
+WFDB / SciPy
+
+ECG record reading and signal processing.
+
+Open-source packages; use documented compatible versions.
+
+scikit-learn / pytest
+
+Baseline machine learning and automated testing.
+
+Open-source packages.
+
+3.2 Make a project folder
+
+LeadlessGuardAI/
+
+  app.py
+
+  requirements.txt
+
+  README.md
+
+  data/
+
+    simulated/
+
+    public_ecg/
+
+  src/
+
+    data_sources/   # simulator and approved importers
+
+    processing/     # quality checks, trends, ECG functions
+
+    models/         # experimental model only
+
+    alerts/         # explainable research flags
+
+    storage/        # local persistence
+
+  tests/
+
+  docs/             # scope, data dictionary, risk register
+
+3.3 Set up a Python environment
+
+On Windows, open PowerShell inside the project folder. Use the official installer for Python and check the exact version on your device before running these commands. A virtual environment keeps this project’s packages separate from other projects.
+
+python -m venv .venv
+
+.\.venv\Scripts\Activate.ps1
+
+python -m pip install --upgrade pip
+
+pip install streamlit pandas numpy plotly scipy wfdb scikit-learn pytest pydantic
+
+If PowerShell blocks activation due to its execution policy, use the official Python venv documentation or activate the environment from Command Prompt instead. Do not change your computer’s security settings blindly just to run a demo.
+
+3.4 Build the first dashboard using synthetic observations
+
+Create a file called app.py and paste the complete starter code below. It creates a fictional one-hour heart-rate trend and offers a basic scenario selector. This is intended only to test the dashboard, labels and data flow; it is not a clinical simulator and must not be used to set patient thresholds.
+
+from datetime import datetime, timezone
+
+import numpy as np
+
+import pandas as pd
+
+import plotly.express as px
+
+import streamlit as st
+
+ 
+
+st.set_page_config(page_title="LeadlessGuard AI", layout="wide")
+
+st.title("LeadlessGuard AI")
+
+st.warning("DEMO ONLY: all values are synthetic, not patient or implant data.")
+
+scenario = st.selectbox(
+
+    "Choose a software-test scenario",
+
+    ["Stable demo", "Sustained rate change", "Missing observations"]
+
+)
+
+rng = np.random.default_rng(7)
+
+minutes = np.arange(0, 60, 1)
+
+rate = 72 + 2*np.sin(minutes/7) + rng.normal(0, 1.2, len(minutes))
+
+if scenario == "Sustained rate change":
+
+    rate[35:] += 18
+
+if scenario == "Missing observations":
+
+    rate[42:48] = np.nan
+
+ 
+
+df = pd.DataFrame({"minute": minutes, "heart_rate_bpm": rate})
+
+df["source_type"] = "SIMULATION"
+
+df["is_simulated"] = True
+
+st.caption("Source: SIMULATION | The pattern is fictional and has no clinical meaning.")
+
+left, right = st.columns(2)
+
+with left:
+
+    st.metric("Latest sample", "Unavailable" if pd.isna(df.heart_rate_bpm.iloc[-1])
+
+              else f"{df.heart_rate_bpm.iloc[-1]:.0f} BPM")
+
+with right:
+
+    st.metric("Data source", "SIMULATED")
+
+fig = px.line(df, x="minute", y="heart_rate_bpm",
+
+              labels={"minute":"Minutes from start", "heart_rate_bpm":"BPM"},
+
+              title="Synthetic heart-rate trend")
+
+st.plotly_chart(fig, use_container_width=True)
+
+if df.heart_rate_bpm.isna().any():
+
+    st.error("Some observations are missing: do not interpret gaps as normal data.")
+
+st.subheader("Data preview")
+
+st.dataframe(df, use_container_width=True)
+
+st.caption("Prototype started at: " + datetime.now(timezone.utc).isoformat())
+
+Run it from the project terminal:
+
+streamlit run app.py
+
+3.5 Expected prototype screen
+
+Figure 2. Illustrative layout. It is a mockup, not a connected clinical monitor.
+
+3.6 Test the first version
+
+Launch the app from a clean terminal and confirm it renders without errors.
+
+Switch between all scenarios and confirm the chart updates.
+
+Confirm that missing values appear as gaps and not as zero BPM.
+
+Ensure every screen visibly says SIMULATION when using generated data.
+
+Never show a “normal,” “safe,” or “high risk” clinical judgement from these scenarios.
+
+Create a Git commit when the starter version runs successfully.
+
+4. Track A — bring in real public ECG research data
+
+4.1 Start with reliable public datasets
+
+Use research ECG data to learn signal handling and rhythm classification. Public ECG is not the same as implanted-device telemetry, and its performance should not be assumed to generalize to implanted-device monitoring without appropriate evaluation.
+
+Dataset
+
+What it contains
+
+Appropriate first use
+
+MIT-BIH Arrhythmia Database [5]
+
+48 half-hour, two-channel ambulatory ECG excerpts from 47 subjects, with expert-reviewed beat annotations. Freely available under its stated Open Data Commons Attribution licence.
+
+Learn WFDB reading, annotation handling, waveform plotting and a baseline beat/rhythm task.
+
+MIT-BIH Atrial Fibrillation Database [6]
+
+25 long-term ECG recordings, mostly from subjects with atrial fibrillation.
+
+A separate exploratory task focused on AF-related rhythm patterns, respecting labels and sampling details.
+
+MIT-BIH Normal Sinus Rhythm Database [7]
+
+Long-term recordings from subjects described by the dataset as having no significant arrhythmias.
+
+Example normal-rhythm data; understand population and dataset limits.
+
+4.2 Safe first steps for an ECG record
+
+1. Open the dataset’s official documentation and licence before downloading. Save the dataset citation in README.md.
+
+2. Download only the subset needed for the first experiment. Keep raw files unchanged and place working copies separately.
+
+3. Use WFDB to read a record and annotation file; keep the header because it contains important sampling and channel information.
+
+4. Plot the waveform with the correct time axis and units. Label plots as public research ECG, not implanted device data.
+
+5. Inspect the dataset’s label definitions. Do not guess that one symbol means a disease; consult the database documentation.
+
+6. Create training and evaluation splits by patient or record where possible. Avoid splitting adjacent beats from the same recording across train and test, because that may leak nearly identical information.
+
+4.3 Example: loading a local record
+
+import wfdb
+
+import matplotlib.pyplot as plt
+
+base = "data/public_ecg/100"  # confirm path after downloading
+
+record = wfdb.rdrecord(base)
+
+annotation = wfdb.rdann(base, "atr")  # confirm the annotation suffix
+
+fs = record.fs; n = min(len(record.p_signal), int(fs * 10))
+
+plt.plot([i / fs for i in range(n)], record.p_signal[:n, 0])
+
+plt.xlabel("Time (s)"); plt.ylabel("Amplitude (header units)")
+
+plt.title("Public ECG — research data, not implant telemetry"); plt.show()
+
+print("Sampling frequency:", fs, "| annotations:", len(annotation.sample))
+
+Dataset caution
+
+The code above assumes the chosen record uses an annotation file called atr and has a first channel. Confirm the downloaded record names, signal units, channel labels, and annotation files in the official header and database documentation.
+
+Figure 3. Artificial ECG-like waveform used only to illustrate signal visualization. It is not from a patient or a database.
+
+4.4 The first model: keep the question small
+
+Select one task with trustworthy reference labels, such as a documented beat-classification task. Start with a simple baseline and use the reference annotations according to the dataset’s published definitions. Do not jump straight to “predict heart attack” or “predict all cardiac problems.” Those are different clinical questions requiring different outcomes and datasets.
+
+Evaluation metric
+
+What it tells you
+
+Why accuracy alone is not enough
+
+Sensitivity / recall
+
+How many reference-positive examples the model detects.
+
+Missed events may matter even if the overall score looks high.
+
+Specificity
+
+How many reference-negative examples are correctly rejected.
+
+Low specificity can create excessive false alarms.
+
+Positive predictive value (precision)
+
+How often positive model outputs match the reference label.
+
+Affected by event prevalence and the selected population.
+
+Confusion matrix
+
+Counts of correct and incorrect predictions by class.
+
+Shows which categories are being confused.
+
+Calibration / threshold analysis
+
+Whether scores correspond sensibly to observed outcome frequencies, when appropriate.
+
+A ranked score is not automatically a trustworthy probability.
+
+6. Track C — develop the early-warning research engine
+
+6.1 Start with three levels, not one magic AI score
+
+Level
+
+What it does
+
+Evidence needed
+
+Level 1 — Data quality
+
+Detects absent, duplicated, stale or invalid data; tracks when the last transmission arrived.
+
+Unit tests and scenarios for missing, corrupted and delayed inputs.
+
+Level 2 — Descriptive trends
+
+Summarizes rate trends and compares an observation to an appropriate documented baseline.
+
+Correctness tests, documented definitions and clinician review of intended interpretation.
+
+Level 3 — Signal/event model
+
+Classifies a selected ECG pattern.
+
+Suitable labels, held-out recordings, sensitivity/false-positive review and external validation.
+
+Future level — Outcome risk prediction
+
+Estimates a defined future outcome over a defined horizon.
+
+Longitudinal outcome-labelled data; study design; independent validation; calibration; subgroup analysis; clinical utility evaluation and applicable regulatory review.
+
+Figure 4. Each gate requires separate evidence. A good classifier score does not establish clinical utility.
+
+6.2 Define one research question clearly
+
+Use a statement template such as: “Can algorithm X identify ECG pattern Y in dataset Z under evaluation method M?” That can be answered with available public data. By contrast, “Can my app predict a heart attack before it happens?” is not answerable by training a simple classifier on MIT-BIH beat annotations.
+
+6.3 Build explainable research flags
+
+Each output should identify its input source, time window, data quality, algorithm version, finding and limitations. Example language for the prototype: “Research flag: sustained deviation from the demonstration baseline in synthetic data; this is not a clinical alert.”
+
+Good output pattern
+
+Avoid
+
+“Trend-change flag: source X, observations from time A to B; rule version 0.1; requires clinical review.”
+
+“Heart attack predicted” based only on a heart-rate fluctuation.
+
+“Data unavailable: no new observation received since timestamp T.”
+
+Showing “normal” merely because no new data arrived.
+
+“Research classifier output: class Y, score S; model validated only on dataset Z.”
+
+Calling the score a personalized clinical probability without calibration and validation.
+
+6.4 Never create clinical alert thresholds by guessing
+
+A threshold used in a demo is a software test parameter, not a medical recommendation. A patient-specific threshold or escalation rule requires an intended use, specialist input and validation. The app should not adjust pacemaker settings, recommend changing medications, or tell a user to delay emergency care.
+
+6.5 Clinical validation is a separate project phase
+
+Choose a specific intended use and outcome before collecting or modeling data.
+
+Specify inclusion/exclusion criteria, reference standard, time horizon and evaluation protocol with qualified clinical collaborators.
+
+Set aside independent patient/record data before tuning models. Avoid leakage from repeated beats or the same person in train and test.
+
+Report sensitivity, specificity, positive predictive value, false alarms per time period where relevant, uncertainty and missing-data performance.
+
+Examine performance across clinically relevant subgroups and different devices / data sources when relevant.
+
+Run prospective or real-world studies only under the appropriate institutional, ethical, security and regulatory pathway.
+
+Important distinction
+
+Detecting an arrhythmia from an ECG is not the same as predicting myocardial infarction, heart failure, cardiac arrest or stroke. Each endpoint needs its own evidence and may require different data.
+
+7. Data governance, security and Indian regulatory considerations
+
+7.1 Data access and consent
+
+Use synthetic data during early software development. Public research data should be used only in accordance with its access terms and licence.
+
+Do not collect identifiable patient data unless there is a documented, lawful and approved purpose, appropriate permissions and necessary safeguards.
+
+For hospital or clinical research, agree in writing who is the data custodian, who may access the data, how long it is kept, and whether it can be used for publications or presentations.
+
+Use pseudonymous research keys rather than names, phone numbers, or hospital IDs where those identifiers are not required.
+
+Keep ethics committee and institutional approvals documented where applicable. Research approval and device regulatory authorization are different questions; one does not replace the other.
+
+7.2 Minimum technical safeguards
+
+Control
+
+Beginner-level implementation
+
+Data minimization
+
+Keep only fields needed for the current test. Do not pull unnecessary identifiers into development folders.
+
+Secrets
+
+Never put passwords, API tokens or private keys in source code or Git. Use environment variables or a secrets manager where applicable.
+
+Encryption
+
+Use encrypted transport for any permitted network service and encrypted storage where required by the data-risk assessment.
+
+Access control
+
+Limit real data to named authorized team members; separate roles and record access.
+
+Audit trail
+
+Record data source, processing step, timestamp, algorithm version and errors without placing identifiers in routine logs.
+
+Backups / deletion
+
+Document backup locations, retention period, deletion method and restoration tests.
+
+Incident handling
+
+Define whom to notify and what to do if data are exposed, corrupted or misrouted.
+
+7.3 India: medical-device software context
+
+CDSCO states that medical devices in India are regulated under the Drugs and Cosmetics Act, 1940 and Medical Devices Rules, 2017, and its definition includes software intended for specified medical purposes. The CDSCO medical-device pages now list a “Guidance document on Medical Device Software under MDR-2017” dated 21 July 2026. Review the current official document and obtain appropriate regulatory advice before developing for clinical use or distribution. [9, 10]
+
+The fact that a software prototype uses AI does not by itself determine its regulatory class. Intended use, claims, functionality, relationship to the medical device, and applicable rules matter. Do not infer a class, licence requirement or exemption from this beginner guide.
+
+CDSCO — Medical Device & Diagnostics (official guidance index) — Check the current Medical Device Software guidance and the linked Medical Devices Rules, 2017.
+
+India Code — Medical Devices Rules, 2017 — Official legal text; use current amendments and notices as well.
+
+FDA — Content of Premarket Submissions for Device Software Functions — A useful technical/regulatory reference on documenting device-software safety and effectiveness; it is not Indian legal advice.
+
+MeitY — Digital Personal Data Protection Act, 2023 — Review applicable commencement notifications and rules rather than assuming every provision commenced simultaneously.
+
+7.4 Emergency and clinical language
+
+The prototype should clearly state that it is not an emergency monitoring service. A research demonstration may contain delays, communication gaps or unavailable observations. Do not promise real-time rescue, uninterrupted monitoring or that the system can rule out an emergency. Patient-facing content must not advise the user to delay urgent care.
+
+8. A realistic 90-day execution schedule
+
+This schedule assumes you are learning while building. 
+
+Week 1 | Days 1–7 | Scope + setup
+
+Day
+
+Task
+
+1
+
+Write scope: telemetry, ECG analysis and future-risk prediction are distinct.
+
+2
+
+Define initial users, prototype features and exclusions.
+
+3
+
+Create safety rules and data-source labels.
+
+4
+
+Install Python, editor and Git.
+
+5
+
+Create the project folder and virtual environment.
+
+6
+
+Create README, requirements and test folder.
+
+Week 2 | Days 8–14 | Simulation
+
+Day
+
+Task
+
+8
+
+Design the common observation schema.
+
+9
+
+Implement the simulator.
+
+10
+
+Generate stable demo trends.
+
+11
+
+Add synthetic event and status records.
+
+12
+
+Simulate missing and malformed data.
+
+13
+
+Test timestamp and source flags.
+
+14
+
+Document fields, units and null handling.
+
+Week 3 | Days 15–21 | Dashboard
+
+Day
+
+Task
+
+15
+
+Build the Streamlit app shell.
+
+16
+
+Show source and connection status.
+
+17
+
+Create trend chart.
+
+18
+
+Add event cards and timestamps.
+
+19
+
+Add missing-data warnings.
+
+20
+
+Add selectable test scenarios.
+
+21
+
+Test launch and commit to Git.
+
+Week 4 | Days 22–28 | Public ECG
+
+Day
+
+Task
+
+22
+
+Read MIT-BIH documentation and licence.
+
+23
+
+Download a small subset.
+
+24
+
+Load a record using WFDB.
+
+25
+
+Plot signal with correct sampling metadata.
+
+26
+
+Read reference annotations.
+
+27
+
+Add record selection.
+
+28
+
+Write the difference between ECG data and implant telemetry.
+
+Week 5 | Days 29–35 | Baseline model
+
+Day
+
+Task
+
+29
+
+Choose one well-defined task.
+
+30
+
+Build preprocessing pipeline.
+
+31
+
+Extract features or construct signal windows.
+
+32
+
+Split by record/patient to avoid leakage.
+
+33
+
+Train a simple baseline.
+
+34
+
+Calculate confusion matrix and metrics.
+
+35
+
+Add model inference and limitations.
+
+Week 6 | Days 36–42 | Evaluation
+
+Day
+
+Task
+
+36
+
+Compute sensitivity, specificity and precision.
+
+37
+
+Review false negatives.
+
+38
+
+Review false positives.
+
+39
+
+Test noise and data-quality failures.
+
+40
+
+Inspect class-specific performance.
+
+41
+
+Use held-out recordings.
+
+42
+
+Write evaluation report.
+
+Week 7 | Days 43–49 | Trends + flags
+
+Day
+
+Task
+
+43
+
+Implement rolling summaries.
+
+44
+
+Implement baseline comparisons.
+
+45
+
+Add configurable demo rules.
+
+46
+
+Separate model outputs from trend flags.
+
+47
+
+Explain every flag.
+
+48
+
+Test missing/stale/conflicting observations.
+
+49
+
+Request clinician review of the intended workflow.
+
+Week 8 | Days 50–56 | Storage + API readiness
+
+Day
+
+Task
+
+50
+
+Add local database.
+
+51
+
+Store source and time metadata.
+
+52
+
+Track model/app versions.
+
+53
+
+Add documented FastAPI endpoint if useful.
+
+54
+
+Validate inputs and errors.
+
+55
+
+Test API and persistence.
+
+56
+
+Confirm observations survive restart.
+
+Week 11 | Days 71–77 | Reliability + privacy
+
+Day
+
+Task
+
+71
+
+Create risk register.
+
+72
+
+Test delayed/missing input.
+
+73
+
+Test corrupted records and app failures.
+
+74
+
+Review sensitive data handling and secrets.
+
+75
+
+Review alert wording with clinician if possible.
+
+76
+
+Document intended use and claim limits.
+
+77
+
+Draft clinical validation and ethics plan.
+
+Week 12 | Days 78–84 | Demonstration
+
+Day
+
+Task
+
+78
+
+Refine dashboard layout.
+
+79
+
+Improve charts and explanations.
+
+80
+
+Demonstrate simulation end to end.
+
+81
+
+Demonstrate public ECG and model results.
+
+82
+
+Test a clean/offline installation.
+
+83
+
+Complete architecture and evaluation documents.
+
+84
+
+Run full demo and list gaps.
+
+Days 85–90 | Consolidation
+
+Day
+
+Task
+
+85
+
+Review requirement checklist.
+
+86
+
+Fix highest-priority bugs.
+
+87
+
+Finalize citations and licences.
+
+88
+
+Present to technical/clinical mentor.
+
+90
+
+Write status report separating implemented, simulated, validated and unavailable features.
+
+9. Checklists and decision gates
+
+9.1 Prototype acceptance checklist
+
+☐ The app runs locally from documented steps.
+
+☐ The data-source label is always visible.
+
+☐ Synthetic data is never mistaken for a patient observation.
+
+☐ Missing observations are clearly distinguished from normal measurements.
+
+☐ ECG waveforms include sampling and source metadata.
+
+☐ The model is tested on data not used for fitting or model selection.
+
+☐ Performance includes false-positive and false-negative analysis, not accuracy alone.
+
+☐ Every research flag explains its source and reason.
+
+☐ No clinical diagnosis, treatment recommendation or false emergency guarantee is displayed.
+
+☐ The project README lists dataset and software licences.
+
+9.3 Go / no-go gates
+
+Gate
+
+Go when…
+
+No-go / fallback
+
+Gate 1: Prototype
+
+Synthetic scenarios and public ECG import work reproducibly.
+
+Fix data-quality and labeling issues before modeling.
+
+Gate 2: Research model
+
+The intended task, labels, splits and metrics are documented.
+
+Do not advertise clinical prediction; continue dataset exploration.
+
+Gate 4: Patient-facing study
+
+Clinical protocol, approvals, intended use, safety and relevant regulatory pathway are in place.
+
+Keep software in research/demo mode.
+
+9.4 Suggested technical documents to create
+
+Document
+
+What it should contain
+
+README.md
+
+Project goal, installation, how to run, data-source labels, known limitations.
+
+requirements.md
+
+Functional requirements, non-functional requirements, intended users and out-of-scope claims.
+
+data_dictionary.md
+
+Field name, definition, units, source, nullable/required, time resolution and allowed values.
+
+risk_register.md
+
+Hazard, cause, effect, mitigation, verification test and owner.
+
+validation_plan.md
+
+Dataset, intended task, split method, metrics, failure cases and acceptance criteria.
+
+model_card.md
+
+Training sources, population, labels, intended task, test results, known limits and prohibited use.
+
+9.5 Final product positioning
+
+A defensible project claim
+
+“LeadlessGuard AI is a research prototype for visualizing synthetic and public cardiac signals, exploring ECG classification, and testing explainable trend flags. Clinical risk prediction remains conditional on independent clinical validation.”
+
+This wording is more credible than making unsupported clinical-prediction claims. Update the statement only when documented evidence supports each added capability.
+
+10. Beginner glossary
+
+Term
+
+Plain-language definition
+
+Leadless pacemaker
+
+A small pacemaker implanted in the heart without separate electrical leads.
+
+Telemetry
+
+Data sent from a device to another system.
+
+API
+
+A documented software interface that allows systems to exchange information.
+
+SDK
+
+A software development kit containing tools or code for building against a supported interface.
+
+ECG
+
+Electrocardiogram: a recording of the heart’s electrical activity from electrodes on the body.
+
+Electrogram
+
+Electrical signal measured inside a cardiac device system; it is not necessarily identical to a surface ECG.
+
+Annotation
+
+A label attached to a signal segment or event, often supplied by trained reviewers in a research dataset.
+
+Sensitivity
+
+Share of reference-positive examples detected by the model.
+
+Specificity
+
+Share of reference-negative examples correctly rejected by the model.
+
+Positive predictive value / precision
+
+Share of model-positive predictions that are correct against the chosen reference.
+
+Data leakage
+
+Information from the test set or same patient/record unintentionally influences model training or model selection.
+
+External validation
+
+Testing the system on an independent dataset or setting different from development.
+
+Medical-device software
+
+Software that may be regulated because of its intended medical purpose; exact treatment depends on applicable law and intended use.
+
+10.1 Official source library
+
+The following sources support a beginner research project and are maintained by regulators, research dataset hosts or software projects. They do not replace legal advice or clinical supervision.
+
+[5] PhysioNet — MIT-BIH Arrhythmia DatabaseDataset scope, record details, annotations, access policy and citation.
+
+[6] PhysioNet — MIT-BIH Atrial Fibrillation DatabasePublic long-term ECG recordings for specific AF research tasks.
+
+[7] PhysioNet — MIT-BIH Normal Sinus Rhythm DatabasePublic records described by the dataset documentation as having no significant arrhythmias.
+
+[9] CDSCO — Medical Device & Diagnostics guidance indexGovernment of India page for Medical Device Software guidance and related rules.
+
+[10] India Code — Medical Devices Rules, 2017Official legal text; check applicable amendments and current notices.
+
+[11] FDA — Content of Premarket Submissions for Device Software FunctionsUS guidance useful for software documentation and safety/effectiveness planning; not Indian law.
+
+[12] MeitY — Digital Personal Data Protection Act, 2023Official Act text; confirm current commencement notifications and rules.
+
+[13] WFDB Python package documentationDocumentation for reading and working with WFDB waveform records.
+
+[14] Python virtual environmentsOfficial Python documentation for isolated project environments.
+
+[15] Streamlit documentationOfficial getting-started guide for the prototype dashboard.
+
+[16] scikit-learn documentationOfficial machine-learning tools and evaluation documentation.
+
+Final reminder
+
+Build honestly; validate carefully
+
+A successful first version is a local research dashboard that handles synthetic observations and public ECG data correctly. A safe clinical version requires much more evidence: independent validation, a defined intended use, clinical review, privacy safeguards and the applicable regulatory pathway.
+
+PART II — THE CANONICAL HEALTHHEART SPECIFICATION
+
+This part integrates the 25-page user-supplied coding brief, retained HealthHeart reference material, the supplied screenshots/infographics and technical/research background sources. Earlier chapters include a quick Python/Streamlit learning route. The uploaded HealthHeart coding brief specifically selects TypeScript + React + Vite for the main product UI. For a consistent project, use React/Vite for the actual HealthHeart interface and keep Python/WFDB as an optional separate ECG-research workbench; do not unintentionally maintain two competing dashboards.
+
+Non-negotiable safety boundary
+
+Track A is simulation-only. It must not connect to, command, program or deliver therapy through any real implanted pacemaker. Do not implement real implant BLE characteristics, clinical programmer protocols, implant firmware or any mechanism that could trigger pacing in a person. All pacemaker behavior in Track A is fictional software behavior.
+
+11. Start with the correct technology stack
+
+Layer
+
+Choice
+
+Purpose
+
+Main application UI
+
+TypeScript + React + Vite
+
+Responsive browser app for phone/tablet/desktop with pages, charts, status and controls.
+
+Domain logic / contracts
+
+TypeScript interfaces and modular services
+
+Keeps simulation, telemetry, analytics and user interface separated and testable.
+
+Research ECG workbench (optional)
+
+Python, WFDB, NumPy/SciPy, scikit-learn
+
+Read public waveforms and conduct experiments separately from the device interface.
+
+UI and domain tests
+
+Vitest/Jest; React Testing Library; optional Playwright
+
+Test deterministic behavior, labels, alerts, role permissions and safety boundaries.
+
+Security demonstrations
+
+Local mock BLE/session/replay simulator only
+
+Test defensive code without connecting to a real medical device.
+
+Storage for first release
+
+Local synthetic fixtures; optional local database
+
+No real patient information is required to complete the prototype.
+
+11.1 Install and run the application
+
+Install a current Node.js LTS release, Git and an editor. Open a terminal in your intended projects folder and enter:
+
+npm create vite@latest healthheart -- --template react-ts
+
+cd healthheart
+
+npm install
+
+npm run dev
+
+Open the local URL shown in the terminal. You now have a starter web interface, not a pacemaker connection. Later, add simulation modules one by one and keep each module covered by tests.
+
+Node.js official downloads
+
+Vite official guide
+
+React learning documentation
+
+TypeScript Handbook
+
+Why the earlier Python instructions are still present
+
+The first part of this guide demonstrates a quick optional Streamlit learning prototype. The uploaded coding brief specifies React/Vite for the HealthHeart product shell. Pick one primary UI (React/Vite) for the ongoing HealthHeart project; Python can be a separate analysis tool and export documented results through files or a future documented research API.
+
+11.2 Recommended folder structure
+
+healthheart/
+
+  package.json, tsconfig.json, vite.config.ts, index.html
+
+  src/
+
+    app/                 # app shell, navigation, global safety banner
+
+    components/          # cards, charts, labels, accessible controls
+
+    pages/               # Home, ECG, Signals, Device, Trends, Alerts,
+
+                         # Security, Audit, Research, Settings, About
+
+    types/               # typed data contracts and schemas
+
+    domains/
+
+      pacingSimulation/  # deterministic simulated core only
+
+      telemetrySimulation/ # read-only mock packets, no real BLE
+
+      signals/           # ECG, PPG, SpO2, BIA synthetic generators
+
+      analytics/         # features and research-only patterns
+
+      alerts/            # simulated rule alerts and acknowledgment
+
+      security/          # mock pairing, replay protection, threat tests
+
+      audit/             # append-only simulated audit history
+
+      batteryModel/      # engineering duty-cycle model
+
+    services/            # simulator/public-data adapter interfaces
+
+    data/                # fictional scenarios and fixtures
+
+    styles/              # typography, responsive/high-contrast UI
+
+    tests/               # unit, integration, safety-boundary tests
+
+  docs/                  # architecture, data dictionary, risk/test plans
+
+11.3 The three trust domains
+
+Conceptual dataflow: a source adapter feeds a quality gate and dashboard. Track A stops at simulated/public research data.
+
+Domain
+
+Responsibilities
+
+Forbidden behavior
+
+1 — Simulated pacing core
+
+Deterministic cardiac events, sensing, pacing decision simulation and fictional device state.
+
+No real therapy command; no real pulse/electrode/energy-delivery instructions; no implant firmware.
+
+2 — Telemetry gateway
+
+Serialize packets, attach sequence/time/session/message IDs, validate packets, mock authentication, replay defense, logging and connection state.
+
+No real implant radio; no guessed BLE service; telemetry is read-only.
+
+3 — Smartphone/user application
+
+Visualization, monitoring, research analytics, alerts, longitudinal trends and scenario configuration.
+
+Cannot directly modify pacing state; AI cannot change even simulated pacing automatically.
+
+12. All 17 build stages in the supplied coding brief
+
+Treat these stages as the authoritative feature list for the HealthHeart simulation. After every stage: preserve existing functionality; explain files affected before changing architecture; add or generate tests; and label the application simulation-only.
+
+Build stage
+
+Requirements preserved from coding.pdf
+
+Done when
+
+1. Overall architecture
+
+Simulation-only system; deterministic pacing domain; read-only telemetry; patient and clinician/research dashboards; ECG/PPG/SpO2/HR/device/battery/alerts/trends/AI placeholders; modular TypeScript/React/Vite; responsive desktop/mobile; typed contracts; architecture diagram; folders, shell, placeholder pages/services and embedded safety restrictions. Security model is inspired by OOB setup, ECDH-style key establishment, HKDF-style key derivation, AES-GCM-style authenticated telemetry, monotonic counters, replay detection, session expiry, audit logs and an abstraction for hardware-backed keys.
+
+Architecture and boundary tests; none of the cryptographic concepts are claimed to be real implant protocol or certification.
+
+2. Simulated pacing engine
+
+Fictional device ID/model/firmware/protocol; intrinsic ventricular events; rate and RR intervals; missed/sensed/paced events; fictional lower-rate threshold; simulated pacing timestamps/percentage/capture status; battery %, estimated trend, temperature, impedance diagnostic, status, alerts and event counter; event log includes ID/time/type/source/HR/pacing state/sequence. Scenarios: normal sinus, complete-heart-block-like, bradycardia, irregular, tachycardia-like, intermittent conduction, noisy input, dropout.
+
+Deterministic unit tests. Never output real pulse amplitude, pulse width, electrode, energy or device-control commands.
+
+3. Synthetic ECG
+
+P/QRS/T-like synthetic waveform; configurable RR and rate variation; baseline wander/noise; intrinsic-sensed, simulated pacing, QRS-detection, missed-event and artifact markers; seven patterns (normal, brady, complete-block-like, irregular, tachy-like, noise, dropout); controls for simulated rate, variability, noise, baseline drift, conduction delay and pacing occurrence; scroll/zoom/pause/lead selector/grid/time/amplitude scale; CSV/JSON export.
+
+Test RR and rate calculation, QRS timing, pacing-marker placement, missing data. Not a diagnostic ECG.
+
+4. PPG and SpO2
+
+Synthetic pulsatile PPG, amplitude, respiratory modulation, movement artifact, baseline drift and sensor noise; rate from peak intervals; simulated SpO2 and trends; quality Good/Acceptable/Poor/Signal unavailable; current/trend/min-max/quality/source; faults include motion, poor contact, sensor disconnect, low amplitude, unrealistic values and packet loss.
+
+Display unreliable state for poor quality. Test peak detection, gaps, quality decisions and simulation boundaries. No unsupported smartphone SpO2 accuracy claim.
+
+5. BIA and trends
+
+Research-only synthetic impedance baseline/variation/respiratory modulation/noise/artifacts; simulated impedance/trend/quality/respiratory relationship; cross-signal comparison of ECG, PPG, SpO2, BIA, HR and pacing; short/medium trend, baseline deviation and confidence; disconnected/noisy/motion/missing/unstable baseline faults; interactive multi-signal overlay.
+
+All fictional physiological data labeled; BIA is not a clinical measurement here.
+
+6. Main responsive dashboard
+
+Session header (simulated patient ID, session, connection, last synchronization); heart card (HR/rhythm/intrinsic rate/pacing %); simulated SpO2; expandable synthetic ECG; PPG and BIA; simulated device status/battery/pacing/sensing/telemetry; info/warning/critical-simulation alerts; AI explanation; navigation Dashboard/ECG/Signals/Device/Trends/Alerts/Security/Audit/Research.
+
+Accessible typography, keyboard navigation, smartphone/tablet/desktop and high-contrast status states; permanent simulation badge.
+
+7. Mock BLE and telemetry
+
+Local-only flow smartphone → mock BLE → gateway → simulated device telemetry service → simulated pacing domain; OOB token, mock QR/NFC enrollment, device identity check; model ECDH/HKDF/AES-GCM concepts but use known libraries for ordinary app crypto; packet has sequence/timestamp/session ID/message ID; reject duplicate/out-of-order/expired/invalid-auth packets; packet types ECG/PPG/SpO2/BIA/HR/diagnostics/alerts; attacks simulated locally: replay, altered/invalid/malformed packet, unauthorized pairing, flooding, expired session, wrong identity.
+
+Dashboard shows session, authenticated/rejected, replay/malformed counts and events. No real implant connection, external attack or invented crypto.
+
+8. Trust boundary and approval
+
+Three domains above; telemetry read-only. Any research-only configuration change follows request → simulation review → explicit research approval → simulated value change → audit log. Record old/new value, user, timestamp, reason, approval status and audit ID. Roles Viewer, Researcher, Clinician-Simulation, Administrator.
+
+Clinician-Simulation is not a clinical role. Test that ordinary telemetry cannot alter pacing state.
+
+9. AI-assisted analytics
+
+Inputs synthetic ECG/PPG/SpO2/BIA/HR/pacing markers/device telemetry; preprocessing filters/normalization/missing data/quality; features HR/RR variability/pacing percentage/sensed-to-paced ratio/PPG rate/quality/SpO2 and BIA trends; classes normal simulated rhythm, simulated bradycardia, tachy-like, irregular, artifact, dropout, increased pacing burden, telemetry anomaly and data inconsistency; explain detected pattern/evidence/confidence/source signals/window/limitations.
+
+Never diagnose, prescribe, modify pacing, send therapy, override safety or communicate directly with an implant. “High confidence” on synthetic data is not clinical confidence.
+
+10. Alerts and longitudinal monitoring
+
+Time windows 1h/6h/24h/7d/30d; trend HR/pacing percent/SpO2/PPG rate/BIA/quality/simulated battery/telemetry reliability. Alerts for simulated sustained bradycardia, increased pacing, poor ECG/PPG, simulated low SpO2 trend, lost telemetry, security failures and fictional battery warning; severity Information/Warning/Critical Simulation Alert. Include what/when/signal/quality/confirmation/simulation; acknowledge/resolve/comment/audit.
+
+Never reuse fictional limits in real patient care.
+
+11. Cybersecurity threats and audit
+
+Threat types: man-in-the-middle, unauthorized pairing, replay, resource exhaustion, malformed packet, memory-safety input failure, credential/key compromise simulation, unauthorized configuration, telemetry-domain compromise and OTA-update compromise simulation. Every threat: vector/domain/impact/detection/mitigation/audit/test. Append-only audit fields timestamp/event ID/category/actor/domain/result/severity/correlation ID/integrity field; Security Center and local threat console.
+
+No malware, real exploit code, external scans or attacks. Demonstrations do not certify security.
+
+12. Battery and duty-cycle model
+
+Fictional initial capacity, pacing/telemetry/sensor activity, wireless wake windows and idle periods; deep-sleep → telemetry wake → sensor sampling → processing → sleep. Compare continuous/periodic/low-duty telemetry, high sensor use and repeated connection attempts. Dashboard fictional battery %, modeled duration, power breakdown, wake time and warning when modeled budget exceeded.
+
+Persistent label “Battery Simulation — Engineering Model”; no prediction of actual implant battery life.
+
+13. Research/Clinician-Simulation workspace
+
+Select fake patient/scenario, start/pause, rhythm selection and simulated parameters; observe ECG/PPG/SpO2/BIA/pacing markers/alerts/telemetry/AI/security; export research data. A: complete-block-like; B intermittent conduction; C low intrinsic rate/high pacing burden; D normal rhythm; E noisy ECG/PPG; F telemetry failure; G replay; H battery/resource exhaustion. Each records description/initial conditions/expected behavior/telemetry/alerts/AI/test result; safe reset.
+
+Never operate a real implant.
+
+14. Verification suite
+
+Functional tests HR/RR/sensing/pacing/%/ECG/PPG/SpO2/BIA/telemetry; security auth/replay/tampering/sequence/session/config/malformed/flooding/audit integrity; reliability missing packets/dropout/malformed/reconnect/clock differences/incomplete data; UI charts/alerts/roles/security/audit; safety tests AI cannot change state, phone cannot trigger therapy, unauthorized config denied, malformed input cannot alter core, no implant communication. Unit/integration/security/end-to-end; results PASS/FAIL/BLOCKED/NOT TESTED.
+
+Do not claim regulatory compliance based on engineering tests.
+
+15. Polished final app
+
+Home, ECG, Multi-signal, Device, AI Analytics, Security, Audit, Research, Settings and About; consistent units/timestamps; persistent “RESEARCH SIMULATION — NOT A MEDICAL DEVICE”; conceptual project description.
+
+No claims of FDA approval, validation, diagnosis, therapy, implant compatibility or safety certification.
+
+16. Technical documentation
+
+Create system architecture, software architecture, data-flow, trust-boundary diagram, telemetry architecture, simulation engine architecture, ECG/PPG/BIA pipeline, AI pipeline, cybersecurity architecture, threat model, data dictionary, simulator API/interface, database schema, audit spec, test strategy, verification matrix, failure-mode analysis, safety-boundary analysis, research limitations and future roadmap. Tag features SIMULATION/MONITORING/ANALYTICS/SECURITY/RESEARCH ONLY/FUTURE CLINICAL DEVELOPMENT.
+
+Real implanted-pacemaker programming remains outside scope.
+
+17. Code/safety review
+
+Review architecture, security, validation, authentication/replay/authorization, unsafe state transitions, race conditions, memory/resource use, UI, sensor handling, AI reliability, error handling, coverage and simulation/real boundary. Report Critical/High/Medium/Low/Tests Needed/Recommendations and patch only safe simulation bugs. Suggested sequence 1→17, extend existing code and preserve prior features.
+
+Prove no real control, no real BLE service, no automatic therapy, AI cannot change pacing, mobile cannot bypass gateway, telemetry read-only, malformed packets do not change core, simulated physiological values labeled.
+
+13. Safe starter TypeScript contract
+
+This is a software schema for simulated messages only. It is not a BLE service description, implant packet format, or product API.
+
+type SignalKind = "ecg" | "ppg" | "spo2" | "bia" | "heart_rate" | "device_diagnostic" | "alert";
+
+type SignalQuality = "good" | "acceptable" | "poor" | "unavailable";
+
+interface MockTelemetryEnvelope<T> {
+
+  source: "simulation";
+
+  simulated: true;
+
+  schemaVersion: "0.1";
+
+  sessionId: string;
+
+  messageId: string;
+
+  sequenceNumber: number;
+
+  observedAtUtc: string;
+
+  signalKind: SignalKind;
+
+  quality: SignalQuality;
+
+  payload: T;
+
+}
+
+interface SimulatedHeartRatePayload {
+
+  beatsPerMinute: number | null;
+
+  rhythmLabel: string | null;
+
+  pacingPercentage: number | null;
+
+}
+
+// The mock telemetry module is read-only; it has no therapy command API.
+
+13.1 Data gate checklist
+
+Source is explicit and cannot be mistaken (simulation / public ECG).
+
+Schema version and field types are checked.
+
+Timestamps parse correctly and units are defined.
+
+Duplicate, out-of-order, expired or malformed packets are rejected.
+
+Missing data are null/unavailable, never silently converted to zero.
+
+Quality state is shown before analysis.
+
+Every research result keeps source/time/algorithm version.
+
+A malformed input cannot modify the simulated pacing-core state.
+
+PART III — TRACK A: BUILD AND DEMONSTRATE THE PROTOTYPE
+
+14. Demonstration walkthrough for someone starting from zero
+
+Figure 3. Dashboard concept; sample values are fictional and intentionally marked DEMO/SIMULATION.
+
+Run `npm run dev` and open the local URL printed by Vite.
+
+Check the persistent banner: “RESEARCH SIMULATION — NOT A MEDICAL DEVICE”.
+
+Select “Normal intrinsic rhythm” and start the deterministic scenario.
+
+Observe rate trend, synthetic ECG and event markers update from the same simulation clock.
+
+Select bradycardia or complete-heart-block-like simulation and verify simulated pacing markers appear only according to the fictional mathematical rule.
+
+Select “Noisy ECG and PPG”; quality indicators must change and values must be marked unreliable as needed.
+
+Select “Telemetry failure”; the app should say stale/unavailable, never “normal” or “patient stable”.
+
+Select “Replay test”; an old/duplicate sequence should be rejected and appear in the security log.
+
+Open Audit and verify timestamp, event ID, actor, result, severity and correlation ID for each simulated event.
+
+Export synthetic ECG and mock telemetry as CSV/JSON. Check source, simulated flag and schema version are included.
+
+Run tests and show PASS, FAIL, BLOCKED or NOT TESTED honestly; blocked or untested is not a pass.
+
+Figure 4. Artificial ECG-like signal for UI testing; not a clinical ECG and not an actual patient recording.
+
+15. Simulated pacing engine — fields and test logic
+
+Output
+
+Plain-language meaning
+
+Test expectation
+
+Intrinsic event
+
+Fictional native beat created by the scenario.
+
+Same seed/config gives same event timestamps.
+
+Sensed event
+
+The simulated engine registers an event.
+
+Missed sensing scenarios produce only pre-defined simulated misses.
+
+Paced event marker
+
+A fictional event marker added when simulator logic says a pace would occur.
+
+No marker turns into actual electrical stimulation.
+
+Pacing percentage
+
+Ratio over a declared simulation window.
+
+Document denominator/time window; handle zero denominators.
+
+Capture status
+
+Fictional diagnostic flag.
+
+Never present as actual leadless pacemaker capture measurement.
+
+Battery/temp/impedance
+
+Invented engineering-model values to test layout and logic.
+
+Label simulated and avoid matching/manufacturer-specific actual device specifications.
+
+Timestamped event stream
+
+Event ID, time, type, source, simulated HR, pacing state, sequence.
+
+IDs and sequence monotonic; exports match what dashboard shows.
+
+16. ECG, PPG, SpO2 and BIA build requirements
+
+16.1 ECG
+
+Generate P-, QRS- and T-like waves; configurable RR intervals; rate variation, baseline wander and noise.
+
+Show sensed, simulated-paced, QRS, missed-event and artifact markers.
+
+Provide normal, brady, complete-heart-block-like, irregular, tachycardia-like, noisy and dropout modes.
+
+Controls change simulation parameters only: rate, variability, noise, drift, conduction delay and pacing occurrence.
+
+Show scrolling view, zoom, pause/resume, simulated lead selector, grid, time/amplitude scale.
+
+Export synthetic ECG and markers to CSV/JSON. Test RR and HR calculations, QRS timing, marker placement and missing samples.
+
+16.2 PPG / SpO2
+
+Synthesize PPG pulsatility, amplitude changes, respiratory modulation, motion artifact, drift and sensor noise.
+
+Calculate fictional pulse rate from PPG peak intervals.
+
+Display “Simulated SpO2”, trend, min/max in selected time window, quality and source.
+
+Quality states: Good, Acceptable, Poor, Signal unavailable.
+
+Faults: motion artifact, poor contact, disconnected sensor, low signal amplitude, unrealistic values and packet loss.
+
+Data-quality failure must visibly make the value unreliable; tests cover peak detection, gaps, quality logic and simulated SpO2 boundaries.
+
+16.3 BIA and cross-signal trends
+
+Generate synthetic baseline impedance, physiological variation, respiratory modulation, noise and sensor artifacts.
+
+Show simulated impedance/trend, signal quality and relationship to simulated respiratory cycle.
+
+Overlay ECG, PPG, SpO2, BIA, heart rate and pacing markers on an interactive shared timeline.
+
+Calculate short-term and medium-term trend, baseline deviation and signal confidence.
+
+Faults: disconnected sensor, motion artifact, noisy signal, missing signal and unstable baseline.
+
+16.4 Final screen inventory
+
+Page
+
+Required content
+
+Guardrail
+
+Home
+
+Patient/session header; connection/last sync; simulated HR/rhythm/intrinsic rate/pacing%; SpO2; ECG/PPG/BIA cards; device/battery/sensing/telemetry; alerts; concise AI explanation.
+
+Fake patient/session key; persistent simulated label.
+
+ECG
+
+Scrolling synthetic ECG, markers, scenario, zoom/pause and export.
+
+Not diagnostic.
+
+Multi-signal
+
+ECG, PPG, SpO2, BIA, HR and pacing event overlay.
+
+All source/time/quality visible.
+
+Device
+
+Fictional ID/model, counts, battery engineering model, simulated sensing/pacing/telemetry status.
+
+Not actual device diagnostics/battery longevity.
+
+AI analytics
+
+Pattern, evidence, confidence, source signals, interval and limitations.
+
+Research flags, not diagnosis.
+
+Security
+
+Mock session and authentication status; accepted/rejected/replay/malformed counters; local threat tests.
+
+No real implant security claim.
+
+Audit
+
+Timestamped history of scenario, alerts, approvals, packet rejection and export.
+
+Do not store unnecessary personal identifiers.
+
+Research
+
+Patient-like synthetic scenario selection, controls, data export, test results.
+
+All inputs are synthetic; no patient treatment.
+
+Settings/About
+
+Units, accessibility, simulation parameters and concept/limitations.
+
+Never expose therapy programming.
+
+17. Security threat-model test matrix
+
+Keep the tests contained
+
+Use locally generated synthetic messages only. The supplied specification explicitly prohibits attacking external systems, implementing malware or providing real-world exploitation code.
+
+Threat from coding brief
+
+Local test example
+
+Expected behavior
+
+Man-in-the-middle / altered packet
+
+Change a payload byte in mock telemetry.
+
+Integrity/authentication check rejects it; log failure.
+
+Unauthorized pairing / wrong identity
+
+Use wrong mock token or device ID.
+
+Session denied; data remains untrusted.
+
+Replay / out of order
+
+Re-send an old sequence/message ID.
+
+Reject; increment replay count; pacing state unchanged.
+
+Resource exhaustion
+
+Generate bounded synthetic packet burst.
+
+Queue/rate limits handle load; only simulator is involved.
+
+Malformed packet / input safety
+
+Missing fields or invalid types/time string.
+
+Schema validation rejects safely before state transition.
+
+Credential/key compromise simulation
+
+Mark a fictional key/session compromised.
+
+Mock session revoked and event logged.
+
+Unauthorized configuration
+
+Request a simulated change without approval.
+
+Denied; no change; audit entry created.
+
+Telemetry-domain compromise
+
+Mark stream untrusted or inject inconsistent records.
+
+Quality/trust gate prevents unsupported analytics.
+
+OTA update compromise simulation
+
+Test a fictional invalid update-status flag only.
+
+Flag and log; no firmware or update pathway implemented.
+
+Memory safety input failure
+
+Feed bounded malformed fixtures/fuzz-style test strings.
+
+Safe rejection without corrupting core state.
+
+17.1 Audit record shape
+
+timestamp_utc, event_id, category, actor_id, domain, result, severity,
+
+correlation_id, session_id, message_id, source_label, integrity_field,
+
+redacted_details
+
+An append-only audit demonstration improves traceability but does not prove tamper-proof storage. Document the threat assumptions and test coverage.
+
+18. Battery and duty-cycle engineering simulation
+
+Model fictional initial capacity and activity counters for pacing simulation, telemetry, sensor sampling, mock wireless wake windows and idle time. Simulate deep sleep → telemetry wake window → sensor sampling → processing → return to sleep. Compare continuous telemetry, periodic telemetry, low-duty-cycle telemetry, high sensor activity and repeated connection attempts. Display fictional battery %, modeled duration, power breakdown, wake time and warning when the model exceeds a configured fictional budget.
+
+Required display label
+
+Battery Simulation — Engineering Model. This model does not estimate or predict the battery life of any real implanted pacemaker.
+
+18.1 Eight predefined research scenarios
+
+Scenario
+
+Starting condition / expected behavior
+
+Expected checks
+
+A — complete-heart-block-like
+
+Fictional intrinsic event pattern is absent or uncoupled per selected scenario.
+
+Pacing markers, counters, telemetry and research flag match test definition.
+
+B — intermittent conduction
+
+Alternate fictional intrinsic and missing/conduction intervals.
+
+Mixed sensed/paced markers and correct timestamps.
+
+C — low intrinsic / high pacing burden
+
+Fictional intrinsic rate below a simulation-only configured threshold.
+
+Pacing percentage rises in simulation; no patient inference.
+
+D — normal intrinsic rhythm
+
+Stable fictional event intervals.
+
+Expected intrinsic events and no false “clinical all-clear”.
+
+E — noisy ECG/PPG
+
+Noise and artifacts increase.
+
+Signal quality degrades; low-quality values marked unreliable.
+
+F — telemetry failure
+
+Mock packet stream pauses or drops.
+
+Stale/unavailable state and connection-loss alert/audit.
+
+G — replay attack
+
+An old local mock packet repeats.
+
+Packet rejected, security event counted, simulation core unchanged.
+
+H — battery/resource exhaustion
+
+More simulated wake-ups/telemetry/sensor activity.
+
+Modelled energy decreases faster; display is explicitly an engineering model.
+
+Each scenario record must contain a description, starting conditions, expected behavior, generated telemetry, expected alerts, expected AI analysis and test result. Include a “Reset to Safe Simulation State” button.
+
+PART V — TRACK C: CARDIAC RISK-ANALYSIS RESEARCH
+
+25. Define the research objective before training a model
+
+Start narrow
+
+An ECG classifier detects a label in an available signal. Predicting a future heart attack, heart failure episode or other cardiovascular event is a separate task that requires outcome-labelled longitudinal data, a defined prediction horizon and independent clinical validation.
+
+Level
+
+Research question
+
+Allowed initial output
+
+1. Signal quality
+
+Can the current signal be analyzed reliably?
+
+Good/acceptable/poor/unavailable and reason.
+
+2. Rhythm/beat pattern
+
+Does this annotated ECG segment fit a defined reference label?
+
+Research classifier label, evidence and errors versus reference annotations.
+
+3. Trend flag
+
+Has a metric changed relative to a documented baseline?
+
+Explainable research flag and data-quality status.
+
+4. Future clinical event
+
+Can data predict a defined outcome within a fixed time horizon?
+
+Only after suitable clinical outcome data, study design and independent validation; not a first-version promise.
+
+26. Public ECG databases: what they contain and what they do not
+
+Dataset
+
+Official description
+
+First research use
+
+Important limitation
+
+MIT-BIH Arrhythmia Database
+
+48 half-hour two-channel ambulatory ECG excerpts from 47 subjects; 360 samples/s/channel; around 110,000 beat annotations; reference annotations reviewed by cardiologists.
+
+Load, plot and inspect annotated waveform; evaluate beat/event detection with record-separated tests.
+
+Historical, limited population and surface ECG; not leadless-pacemaker telemetry or clinical outcomes.
+
+MIT-BIH Atrial Fibrillation Database
+
+25 long-term ECG records, mostly paroxysmal AF; around 10 hours each; 23 records with two ECG signals at 250 samples/s; rhythm labels include AFIB, AFL, J and N.
+
+Atrial-fibrillation-related rhythm research using the dataset’s documented labels.
+
+Some beat annotations are automated/uncorrected; inspect documentation and annotation type.
+
+PhysioNet — MIT-BIH Arrhythmia Database — Official data description, download and citation.
+
+PhysioNet — MIT-BIH Atrial Fibrillation Database — Official data details, annotations and access policy.
+
+26.1 Work with a public recording step by step
+
+Read the official database documentation, citation requirements and licence before use.
+
+Download a small number of records first; do not start by downloading every file.
+
+Read record headers to learn sampling rate, units, channel labels and annotation format.
+
+Plot the waveform with a correct time axis and overlay reference annotations.
+
+Define the unit of prediction (beat, fixed window, rhythm interval or recording) before preparing labels.
+
+Split by person/record, not randomly by neighboring beats, to prevent data leakage.
+
+Keep a final test set untouched until preprocessing and model choices are complete.
+
+Report error types and inspect the false-positive/false-negative examples on the held-out records.
+
+27. ECG research workflow and validation gates
+
+Figure 7. Validating the input, signal quality, model performance, generalization and clinical utility are separate tasks.
+
+ECG waveform + annotations
+
+       ↓
+
+source / schema / timestamp checks
+
+       ↓
+
+signal quality + missing-data checks
+
+       ↓
+
+preprocessing (document filters and normalization)
+
+       ↓
+
+annotation alignment and label definition
+
+       ↓
+
+features or waveform model
+
+       ↓
+
+train on training records; tune on validation records
+
+       ↓
+
+locked test on unseen records/patients
+
+       ↓
+
+error and subgroup analysis
+
+       ↓
+
+research report, model card and limitations
+
+27.1 Metrics in plain language
+
+Metric
+
+Question
+
+Binary formula or interpretation
+
+Caution
+
+Sensitivity/recall
+
+How many reference-positive cases were found?
+
+TP / (TP + FN)
+
+False negatives matter; provide uncertainty and class-level results.
+
+Specificity
+
+How many reference-negative cases were rejected correctly?
+
+TN / (TN + FP)
+
+High specificity does not guarantee high sensitivity.
+
+Precision / PPV
+
+How many model-positive flags were actually positive?
+
+TP / (TP + FP)
+
+Depends on prevalence; may fall in a low-prevalence setting.
+
+F1
+
+Balance precision and recall?
+
+2 × precision × recall / (precision + recall)
+
+Can hide subgroup and calibration problems.
+
+AUROC / AUPRC
+
+How well are classes ranked across thresholds?
+
+Area under ROC or precision-recall curve.
+
+Does not choose a safe alert threshold or prove clinical utility.
+
+False alarms per hour/day
+
+How often do false flags occur during monitoring?
+
+False-positive count / observed duration.
+
+Important alarm burden; ensure the test duration/source match intended use.
+
+Calibration
+
+Do predicted probabilities match observed frequencies?
+
+Use calibration curves and suitable statistics.
+
+A probability number is not automatically a calibrated clinical risk.
+
+28. Explain every analytics flag
+
+Detected pattern: Simulated bradycardia pattern
+
+Evidence: Average simulated rate below the configured demo threshold for 45 s
+
+Confidence: High (simulation output only)
+
+Source signals: Synthetic ECG + simulated pacing markers
+
+Time interval: 10:00:00–10:00:45 UTC
+
+Limitations: Synthetic data; not a diagnosis; no patient-risk estimate
+
+The coding brief requires every result to expose detected pattern, evidence, confidence, input signals, interval and limitations. It also explicitly prohibits the AI module from changing pacing parameters automatically, issuing therapeutic commands, overriding safeguards or communicating directly with an implant.
+
+29. Research design and validation pathway
+
+Figure 8 summarizes the Track A/C research workflow rather than a clinical-trial plan. A software-only student prototype can test synthetic-data generation, data handling, signal processing, model evaluation and documentation. Any patient-facing clinical investigation would be a separate project requiring qualified expertise and applicable approvals.
+
+Stage
+
+Question/work
+
+Evidence before proceeding
+
+Define the research task
+
+What single signal, pattern or outcome will the prototype study, using which source and labels?
+
+Written research question; data source; intended task; exclusions and limitations.
+
+Software verification
+
+Do the synthetic generators, data handling, charts, alerts and export behaviors match the specification?
+
+Architecture notes; automated tests; reproducible scenarios; documented failures.
+
+Data-quality verification
+
+Are source labels, timestamps, units, missing values, duplicates and corrupted records handled correctly?
+
+Data-quality rules; tests for stale/missing/invalid observations; clear source provenance.
+
+Public ECG workflow
+
+Are dataset terms, annotations, sampling details and patient/record splits documented?
+
+Dataset citation and license; unchanged raw files; documented labels and split strategy.
+
+Baseline model development
+
+Can a simple, reproducible model evaluate one defined public-ECG task?
+
+Preprocessing steps; model version; training protocol; no leakage between splits.
+
+Held-out evaluation
+
+How does the fixed model perform on recordings not used for fitting or tuning?
+
+Sensitivity, specificity, precision, confusion matrix, false-positive/negative review and uncertainty where appropriate.
+
+Independent research review
+
+Are methods, errors, data limits and intended claims reviewed by a qualified mentor or reviewer?
+
+Review notes; reproducible report; documented limitations and risk register.
+
+Future clinical validation (separate phase)
+
+If patient-facing use is ever proposed, what prespecified clinical outcome and protocol would be needed?
+
+Not part of the current prototype; proceed only with suitable expertise and applicable institutional, ethical, security and regulatory approvals.
+
+29.1 Research and validation design options
+
+Research design
+
+Purpose within Track A/C
+
+Key caveat
+
+Public ECG classification study
+
+Use labelled public ECG to evaluate one defined beat- or rhythm-classification task.
+
+Performance applies only to the dataset, labels and task actually evaluated.
+
+Exploratory trend analysis
+
+Describe a defined change or pattern in synthetic or suitable research signals over a specified window.
+
+Not a clinical prediction; the baseline and analysis window should be stated.
+
+Held-out model evaluation
+
+Test a fixed model on records or participants not used for training or model selection.
+
+Prevent data leakage; report false positives, false negatives and relevant uncertainty, not accuracy alone.
+
+Future external/clinical validation
+
+If patient-facing use is ever proposed, evaluate a prespecified clinical outcome with qualified clinical oversight.
+
+A separate later phase requiring a suitable protocol and applicable approvals; not completed by this prototype.
+
+30. Indian ethics, regulatory and registration checklist
+
+Confirm whether the intended software qualifies as medical-device software based on its actual intended use, claims and functionality; research-only labels do not automatically decide the legal classification.
+
+Consult current CDSCO Medical Device Software guidance under the Medical Devices Rules, 2017. The available CDSCO search result includes a document titled ‘Draft guidance document on Medical Device Software’ dated 21 October 2025; it labels itself a draft for stakeholder comments and says it is for public awareness, not legal or professional purposes. Verify whether a final guidance or newer notice exists before relying on it, and confirm applicability with regulatory specialists.
+
+If an investigational medical-device clinical investigation is proposed, ask CDSCO/institutional regulatory support which application, forms and permissions apply. The supplied infographic references MD-22 / MD-23, but these forms are not a universal shortcut and applicability must be verified for the actual study/product.
+
+Obtain review from the responsible Institutional Ethics Committee when required; informed consent and privacy safeguards are essential for real patient data.
+
+CTRI states trials conducted in India are to be prospectively registered before the first participant is enrolled; confirm the study type and registration requirements early.
+
+If a clinical investigation is conducted, build a protocol with prespecified endpoints, safety monitoring, statistical plan, inclusion/exclusion criteria established by clinicians, data management and adverse event handling.
+
+Consider appropriate Good Clinical Practice and ISO 14155 medical-device clinical-investigation expectations when applicable; do not claim certification merely because a checklist mentions them.
+
+Complete cybersecurity, software life-cycle, usability/human factors, risk management and post-market considerations appropriate to the final product.
+
+CDSCO — Medical Device & Diagnostics — Official portal for current rules and device guidance.
+
+CDSCO — Latest public notices — Check latest guidance document on Medical Device Software under MDR-2017.
+
+Clinical Trials Registry — India — Official free public trial registry; prospective registration is emphasized by CTRI.
+
+India Code — Medical Devices Rules, 2017 — Legal text; check amendments and latest notifications.
+
+PART VI — RETAINED HEALTHHEART VISUALS AND SOURCE DETAILS
+
+This part summarizes the retained HealthHeart showcase and source visuals that remain relevant to Track A/C, while keeping source-derived claims separate from conceptual graphics. A screenshot or infographic is not independent evidence of clinical validity.
+
+31. HealthHeart Physician Showcase — retained Track A/C-relevant content
+
+The uploaded eight-page Physician Showcase describes HealthHeart as a proposed research/development concept, not a clinically validated or approved clinical system. Any patient-facing clinical use or decision-support claim requires independent validation, cybersecurity assessment, qualified clinical review and applicable ethical/regulatory approvals. The retained prototype must not control therapy.
+
+Showcase section
+
+Track A/C content retained
+
+I. Project overview
+
+Local research prototype with synthetic ECG, heart rate, SpO₂/PPG/BIA, simulated pacing/device state, trends and research flags; all illustrative values clearly labelled.
+
+II. Research problem and scope
+
+Build a reproducible simulation dashboard and a separate public-ECG research workflow; do not imply real implant integration or validated patient monitoring.
+
+IV. Simulated signals and ECG review
+
+Candidate fields: synthetic ECG waveform, simulated heart rate/rhythm, source and quality labels, timestamps, event markers and historical trends; imported public ECG remains clearly separate.
+
+V. Research dashboard
+
+Dashboard for session summary, plots, simulated state, data-quality warnings, explainable research flags and longitudinal views.
+
+VI. User roles and access control
+
+Use prototype roles such as Viewer, Researcher, Clinician-Simulation and Administrator; role behavior is demonstrative and must not be presented as a certified clinical access system.
+
+VII. Local cybersecurity demonstrations
+
+Test mock sessions, role permissions, local telemetry integrity, replay rejection and audit events using test fixtures; do not connect to real medical devices or claim certified security.
+
+VIII. Research flags and review
+
+Information/warning/critical-simulation states only; thresholds are software-test parameters; labels require source, interval, rule/model version and limitations; outputs are not diagnoses or emergency alerts.
+
+X. Claims to avoid
+
+Do not claim therapy control, direct implant connection, validated diagnosis, prevention of sudden cardiac death or clinical risk prediction. Describe the work as a simulation and public-ECG research prototype.
+
+XIV. Safety and validation position
+
+Document research tasks, risk controls, software tests, privacy, model performance and limitations; clinical claims require independent validation, qualified review and applicable approvals.
+
+XV. Research and technical sources
+
+Keep dataset documentation, software references, cybersecurity guidance and relevant regulatory guidance for research context; verify relevance and currency before making a claim.
+
+31.1 The Showcase prototype dashboard values are illustrative
+
+Field shown in the Showcase
+
+Example dashboard field
+
+Track A/C use
+
+Heart rate
+
+72 BPM
+
+Fictional synthetic value; show source and timestamp and do not interpret as patient data.
+
+SpO₂
+
+98%
+
+Synthetic illustrative value within Track A, not from an implant or validated sensor.
+
+Device state
+
+SIMULATED
+
+Mock UI state; must not imply an actual device has been checked.
+
+Signal quality
+
+DEMO
+
+Synthetic quality label; use documented quality rules for synthetic/public input.
+
+Research flags
+
+No critical simulation flag
+
+Demo state only, not an “all clear” or clinical alert.
+
+Last observation
+
+10:32 (sample)
+
+Sample timestamp; show source and date/time convention where relevant.
+
+Audit log
+
+Available
+
+Prototype log indicator; does not prove immutability, compliance or production security.
+
+32. Track A/C research framework — 20-panel summary
+
+Figure 8. Research and engineering framework for the retained Track A and Track C scope. It is a planning aid, not a regulator-approved clinical protocol.
+
+Panel
+
+Track A/C content
+
+Implementation note
+
+1. Project scope
+
+Simulation-only prototype; no implant connection, therapy control or clinical decision claims.
+
+Keep all device behavior fictional and visible as simulation.
+
+2. Data inputs
+
+Synthetic scenarios and public ECG records with published labels and annotations.
+
+Preserve dataset citations and distinguish synthetic from public data.
+
+3. Signal modules
+
+Synthetic ECG, PPG, SpO₂ and BIA modules with controlled noise and fault scenarios.
+
+Label fictional physiological values clearly; do not imply validated sensor performance.
+
+4. Source labels and schema
+
+Record source type, timestamp, units, quality state and algorithm version.
+
+Represent missing or unavailable values explicitly; never silently convert them to zero.
+
+5. Data-quality gate
+
+Detect missing, stale, duplicate, malformed, noisy or mislabeled records.
+
+Reject or flag questionable inputs before analysis.
+
+6. Define the research question
+
+Choose one defined ECG classification task or clearly scoped descriptive-trend question.
+
+Match labels and endpoints to the available dataset; avoid unsupported clinical outcomes.
+
+7. Public ECG workflow
+
+Read the dataset documentation, annotation meanings, sampling details and licence.
+
+Cite the source, keep raw files unchanged and document any working copies.
+
+8. Signal preprocessing
+
+Document filters, normalization, segmentation and feature extraction.
+
+Test the pipeline for reproducibility and signal distortion.
+
+9. Dataset split
+
+Separate records or participants across training, validation and final testing.
+
+Avoid leakage from adjacent beats or the same record/person.
+
+10. Baseline model
+
+Begin with a simple model on a task supported by trustworthy reference labels.
+
+Do not jump from beat annotations to predicting heart attack or other unlabelled outcomes.
+
+11. Evaluation metrics
+
+Report sensitivity, specificity, precision and a confusion matrix; assess calibration when appropriate.
+
+Add uncertainty and per-class results where possible; accuracy alone is insufficient.
+
+12. Error analysis
+
+Inspect false positives, false negatives, missing-data cases and subgroup performance.
+
+Document failure conditions and avoid unsupported generalization.
+
+13. Trend analysis
+
+Summarize simulated rate, pacing burden, signal quality and time windows.
+
+Demonstration thresholds are software-test settings, not medical guidance.
+
+14. Explainable research flags
+
+Show source, evidence, time interval, algorithm version and limitations for each flag.
+
+Use research-only wording; do not label synthetic outputs as clinical alerts.
+
+15. Local security tests
+
+Use mock telemetry only; test replay, duplicate/out-of-order messages, malformed packets and session faults.
+
+Keep all security demonstrations local and disconnected from real medical devices.
+
+16. Privacy and governance
+
+Prefer synthetic/public data; document access, retention, ethics and permissions for any approved research data.
+
+Minimize identifiers and restrict access in line with institutional requirements.
+
+17. Safety boundary
+
+No therapy control, diagnosis, prescription or emergency guarantee.
+
+Keep all outputs explicitly research-only and avoid implying emergency detection.
+
+18. Clinical validation readiness
+
+Clinical claims need independent data, defined outcomes, qualified review and applicable approvals.
+
+Performance on synthetic/public ECG does not validate clinical monitoring or patient-risk prediction.
+
+19. Research package
+
+Maintain a runnable dashboard, data dictionary, test report, risk register and model card.
+
+Make assumptions, versions, limitations and results reproducible.
+
+20. Go/no-go gate
+
+Demonstrate reproducibility, source labels, passed safety tests and held-out evaluation before widening claims.
+
+Keep the project in research/demo scope until evidence supports any next step.
+
+33. Track A/C research canvas
+
+Figure 9. Track A/C research canvas summarizing the simulation prototype and research-evaluation scope; it does not represent a validated clinical product.
+
+Canvas block
+
+Track A/C project focus
+
+Practical note
+
+Key collaborators
+
+Academic and technical mentors; cardiology reviewers; public-data hosts; privacy and cybersecurity advisers.
+
+Use published dataset terms and seek qualified review for interpretation and study design.
+
+Key activities
+
+Build the simulator; import public ECG; process signals and labels; test quality gates; evaluate research models.
+
+Prioritize simulation, public-data analysis, testing and documentation.
+
+Research value
+
+Local research dashboard; reproducible ECG workflow; explainable research flags; documented limitations.
+
+Treat outputs as research findings, not clinical alerts or proven patient benefits.
+
+Feedback and support
+
+Technical review; clinical-context feedback; transparent documentation; versioned improvements.
+
+The research prototype does not provide clinical alert response or patient-support services.
+
+Intended users
+
+Students and researchers; software/biomedical mentors; clinician and academic reviewers.
+
+Use demonstrations for education and research feedback; do not present the prototype for unsupervised patient use.
+
+Key resources
+
+Synthetic scenarios; public ECG datasets; React/Vite interface; optional Python/WFDB tools; automated tests and model documentation.
+
+Free tools and public data can support a prototype; independent clinical validation may require further resources.
+
+Dissemination
+
+Local/web demonstration; academic poster or presentation; research report; professional networks.
+
+Share the scope and limitations clearly; do not claim the prototype is an approved clinical product.
+
+Cost structure
+
+Software development and security; computing/storage; data preparation; model evaluation; ethics/regulatory review if clinical use is proposed.
+
+Open-source tooling may reduce early costs, but future clinical validation or product development should not be assumed cost-free.
+
+Research outputs
+
+Simulation prototype; reproducible ECG analysis; held-out evaluation report; risk register; data dictionary and model card.
+
+Extend the research only when evidence, qualified review and any applicable approvals support the next step.
+
+34. Leadless versus traditional pacemaker screenshot
+
+Figure 10. User-provided Apollo Hospitals mobile screenshot; the image is cropped and should be treated as a source note, not a complete comparative evidence table.
+
+Field visible in the Apollo screenshot
+
+Text/value shown
+
+Interpretation / caveat
+
+Title
+
+Leadless Pacemaker Implantation vs. Traditional Pacemaker Implantation
+
+Screenshot comparison heading; the traditional column is cut off in the uploaded crop.
+
+Invasiveness
+
+Leadless: Minimally invasive
+
+Broad patient-facing description; individual procedural risks depend on patient/device.
+
+Lead presence
+
+Leadless: No leads
+
+Refers to no separate transvenous leads; does not mean no implanted device.
+
+Recovery time
+
+Leadless: Shorter recovery
+
+General comparative claim, not a guarantee for an individual.
+
+Infection risk
+
+Leadless: Lower risk
+
+The screenshot claims lower risk; cite specific clinical evidence before using in a scientific/business claim.
+
+Aesthetic outcome
+
+Leadless: No visible device
+
+Implant has no conventional chest pocket/bulge; still an implant inside the body.
+
+Battery life
+
+Leadless: Longer
+
+A general claim only; battery life varies by model, use, and settings. Do not use this as a device-specific estimate.
+
+Cost paragraph
+
+“The average cost of leadless pacemaker implantation in India ranges from ₹1,50,000 to ₹3,00,000.”
+
+As shown in screenshot. Date, inclusions, hospital, device type and package basis are not established in the image; independently confirm before using.
+
+35. Pacemaker surgery costs screenshot
+
+Figure 11. User-provided Yashoda Hospitals mobile screenshot. Values are reproduced from the screenshot; they are not independently verified or necessarily comparable to the leadless-pacemaker range above.
+
+Item visible in screenshot
+
+Quoted value
+
+Important note
+
+Pacemaker surgery in India (average)
+
+₹2,75,000 – ₹3,00,000
+
+Screenshot’s stated amount; type of pacemaker/package inclusions are unclear.
+
+Pacemaker device cost
+
+₹45,000 – ₹1,50,000
+
+Screenshot states this as device cost, potentially separate from surgery.
+
+Pacemaker surgery in Hyderabad
+
+Starts from ₹52,200
+
+Scope of procedure/device and package is not clear from the crop; not directly comparable with national average or leadless implant total.
+
+Contact on screenshot
+
++91 8065906165
+
+Appears in the supplied image; verify directly through the hospital’s current official site before calling or using.
+
+Cost interpretation
+
+The two uploaded images show figures that may cover different device types, regions, procedure components or dates. Do not average them or state that they establish a current leadless-pacemaker price in India. For a real estimate, ask a hospital for a written quote that specifies the model, implant, procedure, hospital stay, diagnostics, follow-up and taxes.
+
+PART VII — COMPLETE REQUIREMENTS, SOURCES AND FINAL CHECKLIST
+
+36. Requirements-to-evidence traceability
+
+Source file/artifact supplied
+
+What is included in this master manual
+
+How it is used
+
+coding.pdf — 25-page build prompt
+
+Every one of its 17 stages is mapped into the requirement table, plus TypeScript starter contract, simulation walkthrough, screens, scenarios, test matrix, threat categories and documentation deliverables.
+
+Canonical software scope for Track A; mock-only boundary explicitly preserved.
+
+HealthHeart_Physician_Showcase-1.pdf — eight-page concept
+
+Selected Track A/C-relevant content summarized: illustrative dashboard values, roles/MFA, cybersecurity, alert framework, research safety boundaries and validation context.
+
+Clinical discussion draft; no validation/approval claim.
+
+Track A/C research canvas — revised visual
+
+The nine canvas blocks now describe simulation, public ECG analysis, research evaluation, documentation and dissemination.
+
+A scope summary for the retained prototype and research engine; not a business forecast.
+
+Track A/C research framework — revised visual
+
+Twenty panels cover simulation scope, public ECG workflow, quality gates, research-model evaluation, cybersecurity, privacy and validation.
+
+A planning aid for Tracks A and C, not a regulator-approved clinical protocol.
+
+1000822547.jpg — Apollo comparison/cost screenshot
+
+Title and all visible leadless-pacemaker comparison rows plus ₹1.5–3.0 lakh range and caveats.
+
+User-supplied screenshot; not independently verified pricing.
+
+1000822546.jpg — Yashoda surgery-cost screenshot
+
+₹2.75–3.0 lakh surgery; ₹45,000–₹1.5 lakh device cost; Hyderabad starts ₹52,200; contact shown; scope caveat.
+
+User-supplied screenshot; values may be different scope/type/date.
+
+Completeness and copyright note
+
+The HealthHeart coding requirements are organized as a feature-by-feature traceability list. Retained source materials are summarized where they inform Track A/C; conceptual visuals are not presented as evidence of clinical validity or product approval.
+
+37. Official references and software resources
+
+PhysioNet — MIT-BIH Arrhythmia Database — Public ECG recordings, annotations, licence and citation.
+
+PhysioNet — MIT-BIH Atrial Fibrillation Database — Long-term ECG recordings and rhythm-annotation details.
+
+CDSCO — Medical Device & Diagnostics — Official regulatory portal.
+
+CDSCO — Latest notices — Check current Medical Device Software guidance under MDR-2017.
+
+India Code — Medical Devices Rules, 2017 — Official legal text; check current amendments.
+
+Clinical Trials Registry — India — Official registry and prospective registration information.
+
+Bluetooth SIG — Core Specification — Generic Bluetooth technical specification only.
+
+Python WFDB documentation — Optional public ECG-data analysis toolkit.
+
+scikit-learn user guide — Baseline model and metrics documentation.
+
+FDA — Cybersecurity in Medical Devices — Useful engineering reference; US guidance is not Indian law.
+
+FDA — Content of Premarket Submissions for Device Software Functions — Useful software documentation reference; not applicable Indian law by itself.
+
+React Learn — Official React beginner lessons.
+
+Vite guide — Official frontend setup.
+
+TypeScript Handbook — Typed model/interface guidance.
+
+38. Final go/no-go checklist
+
+☐ Primary React/Vite interface runs locally and all simulated fields carry explicit source labels.
+
+☐ Simulated pacing engine is deterministic, isolated and contains no real therapy commands.
+
+☐ Synthetic ECG, PPG, SpO2 and BIA modules include fault scenarios and test coverage.
+
+☐ Mock telemetry is read-only and tests reject replay, out-of-order, expired and malformed messages.
+
+☐ AI analysis explains evidence, confidence, signals, time window and limitations; cannot change pacing behavior.
+
+☐ Longitudinal views include 1h, 6h, 24h, 7d and 30d and simulated alerts are auditable.
+
+☐ Battery simulation is clearly an engineering model, not actual implant battery prediction.
+
+☐ All eight research scenarios and PASS/FAIL/BLOCKED/NOT TESTED status behavior are tested.
+
+☐ Clinical/risk claims remain research only unless independently validated and required regulatory/ethics approvals have been obtained.
+
+☐ Supplied screenshots and study findings are clearly distinguished from independently verified official product claims.
+
+☐ Current CDSCO requirements, ethics, consent, privacy and CTRI applicability are checked with the responsible experts before real patient research.
+
+Final positioning statement
+
+“HealthHeart / LeadlessGuard AI is a research prototype for simulating leadless-pacemaker behavior, visualizing synthetic and public cardiac signals, and evaluating explainable trends or defined ECG patterns. Any clinical risk-prediction claim or patient-facing use remains out of scope until independently validated and appropriately reviewed under applicable ethical and regulatory requirements.”
+
+SOURCE ARCHIVE — RETAINED REFERENCE MATERIAL
+
+The chapters above provide the beginner-facing explanation, implementation instructions and requirement synthesis. This annex retains the supporting source pages and images relevant to the remaining project material. The originals are not reflowed. Inclusion preserves reference context; it does not independently validate claims shown in infographics or pricing screenshots.
+
+Supplied original file
+
+Pages / format
+
+Material preserved
+
+coding.pdf
+
+25 PDF pages
+
+Complete visual source: staged implementation prompts, simulation requirements, security boundaries, AI, longitudinal monitoring, tests and documentation.
+
+Two source screenshots + two revised Track A/C graphics
+
+4 images
+
+The leadless-vs-traditional and surgery-cost screenshots remain as supplied; the former business canvas and clinical-trial infographic have been replaced with Track A/C research visuals.
+
+coding.pdf | HealthHeart coding / implementation specification | Original page 1 of 25
+
+coding.pdf | HealthHeart coding / implementation specification | Original page 2 of 25
+
+coding.pdf | HealthHeart coding / implementation specification | Original page 3 of 25
+
+coding.pdf | HealthHeart coding / implementation specification | Original page 4 of 25
+
+coding.pdf | HealthHeart coding / implementation specification | Original page 5 of 25
+
+coding.pdf | HealthHeart coding / implementation specification | Original page 6 of 25
+
+coding.pdf | HealthHeart coding / implementation specification | Original page 7 of 25
+
+coding.pdf | HealthHeart coding / implementation specification | Original page 8 of 25
+
+coding.pdf | HealthHeart coding / implementation specification | Original page 9 of 25
+
+coding.pdf | HealthHeart coding / implementation specification | Original page 10 of 25
+
+coding.pdf | HealthHeart coding / implementation specification | Original page 11 of 25
+
+coding.pdf | HealthHeart coding / implementation specification | Original page 12 of 25
+
+coding.pdf | HealthHeart coding / implementation specification | Original page 13 of 25
+
+coding.pdf | HealthHeart coding / implementation specification | Original page 14 of 25
+
+coding.pdf | HealthHeart coding / implementation specification | Original page 15 of 25
+
+coding.pdf | HealthHeart coding / implementation specification | Original page 16 of 25
+
+coding.pdf | HealthHeart coding / implementation specification | Original page 17 of 25
+
+coding.pdf | HealthHeart coding / implementation specification | Original page 18 of 25
+
+coding.pdf | HealthHeart coding / implementation specification | Original page 19 of 25
+
+coding.pdf | HealthHeart coding / implementation specification | Original page 20 of 25
+
+coding.pdf | HealthHeart coding / implementation specification | Original page 21 of 25
+
+coding.pdf | HealthHeart coding / implementation specification | Original page 22 of 25
+
+coding.pdf | HealthHeart coding / implementation specification | Original page 23 of 25
+
+coding.pdf | HealthHeart coding / implementation specification | Original page 24 of 25
+
+coding.pdf | HealthHeart coding / implementation specification | Original page 25 of 25
+
+Track A/C research canvas | revised visual summary
+
+Research canvas focused on the simulation prototype, public ECG workflow, research evaluation, project resources, dissemination and reproducible outputs.
+
+Track A/C research framework | revised 20-panel visual summary
+
+Track A/C framework showing simulation inputs, source labels, data-quality gates, signal processing, model evaluation, explainability, cybersecurity, privacy and validation boundaries.
+
+1000822547.jpg | Supplied Apollo Hospitals leadless-versus-traditional pacemaker comparison screenshot
+
+Visible comparison rows and price text preserved as submitted. Marketing statements/pricing are not independently verified or universally applicable.
+
+1000822546.jpg | Supplied Yashoda Hospitals pacemaker surgery-cost screenshot
+
+Visible cost rows and phone number preserved as submitted. Pricing scope, date, model and included charges are not independently verified.

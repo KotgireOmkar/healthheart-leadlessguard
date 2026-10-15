@@ -1,0 +1,447 @@
+HEALTHHEART
+
+CARDIAC SIGNAL RESEARCH SIMULATOR
+
+Revised Track A + Track C Build Prompt Pack
+
+Deterministic • Non-model • Beginner-to-end-to-end
+
+FOUNDATION: SIMULATE  →  ANALYZE TRANSPARENTLY  →  VERIFY  →  DOCUMENT
+
+Scope boundaryNo real implant connection or control. No learned-model inference. No clinical diagnosis. HeartGPT is cited as external related work only and is not embedded in HealthHeart.
+
+Prepared from the uploaded HealthHeart/LeadlessGuard guide, prior staged requirements and the supplied HeartGPT README, with duplicate features consolidated.
+
+Purpose: A beginner-to-completion sequence for building one coherent, responsive research website using React, Vite and TypeScript. Track A supplies the deterministic simulation foundation. Track C becomes a transparent, rule-based signal-quality, trend-analysis and research-evaluation layer. Repeated features from the earlier drafts have been consolidated into one implementation stage each.
+
+Project identity: HealthHeart — a cardiac signal and leadless-pacemaker *concept simulation* for software engineering, signal visualization, reproducible public-data exploration and controlled cybersecurity demonstrations. Do not describe it as a real implant integration, clinical monitor or approved medical device.
+
+Important compatibility decision about HeartGPT: The supplied HeartGPT README and its public repository describe pretrained transformer models ECGPT/PPGPT and fine-tuned model variants, plus generation and interpretability GUIs. That is model-based functionality. Because this project explicitly excludes learned models, do not import, execute, fine-tune, bundle or reproduce HeartGPT's model code, checkpoints, tokenization pipeline or inference. Incorporate it transparently as *related work only*: provide an external source card and citation in the References/About page, record what it studies, and state that HealthHeart does not embed the model. This preserves scientific attribution without falsely claiming integration or adding a feature the project owner has ruled out.
+
+Primary references to audit and include in the website's Sources page:
+
+HeartGPT repository: https://github.com/harryjdavies/HeartGPT
+
+HeartGPT paper: https://arxiv.org/abs/2407.20775
+
+HeartGPT repository license: https://github.com/harryjdavies/HeartGPT/blob/main/LICENSE
+
+PhysioNet MIT-BIH Arrhythmia Database: https://physionet.org/content/mitdb/1.0.0/
+
+PhysioNet MIT-BIH Atrial Fibrillation Database: https://physionet.org/content/afdb/1.0.0/
+
+React learning docs: https://react.dev/learn
+
+Vite guide: https://vite.dev/guide/
+
+TypeScript handbook: https://www.typescriptlang.org/docs/
+
+Vitest: https://vitest.dev/guide/
+
+CDSCO Medical Devices Rules, 2017: https://cdsco.gov.in/opencms/opencms/en/Acts-and-rules/Medical-Devices-Rules/
+
+CDSCO Medical Device & Diagnostics guidance index: https://www.cdsco.gov.in/opencms/opencms/en/Medical-Device-Diagnostics/Medical-Device-Diagnostics/
+
+MeitY Digital Personal Data Protection Act, 2023: https://www.meity.gov.in/data-protection-framework
+
+Clinical Trials Registry–India: https://ctri.nic.in/
+
+The HeartGPT repository displays an MIT license. If any of its code is ever reused in a separately approved future version, review the exact files/assets and applicable dataset/checkpoint terms and retain required copyright/license notices. This current build must not copy code, model weights or images from that repository. Do not present repository visibility or a published paper as proof of clinical validity, device compatibility or HealthHeart performance.
+
+How to execute this pack
+
+Open one project workspace in Google AI Studio if that is your chosen coding environment, or use your preferred coding agent/editor. Keep every prompt in the same project context; do not create a new app per stage. If the tool cannot run shell commands or browser tests, it must say so and provide commands/manual checks rather than inventing results.
+
+Submit Prompt 0 first. Read its scope and requirements report before proceeding.
+
+Submit Prompts 1–19 in order. Do not paste the whole pack as one request. The next prompt assumes earlier phases exist.
+
+At each stage, require the tool to change the actual project files, run available checks and report honestly what passed, failed, was blocked or was not tested.
+
+If the agent cannot run a test or command, it must say so and provide the exact command for you to run. It must never report a test as passed without evidence.
+
+Non-negotiable global rules
+
+Build one main website: React + Vite + TypeScript. Do not create a second competing dashboard. A separate Python/WFDB conversion utility may be documented as optional, but the web app remains the primary interface.
+
+No learned or trained models, inference, fine-tuning, model-based diagnosis, probabilistic clinical risk estimates, generative signal output, or model confidence scores. No code/checkpoints/tokenizers from HeartGPT.
+
+Track A is deterministic simulation only. No physical implant pairing, real Bluetooth scanning/GATT services, undocumented pacemaker protocols, firmware, clinical programmer commands, pacing control, therapy configuration, or real-device communication.
+
+Track C is transparent, deterministic analysis: documented signal-quality checks, mathematical measurements, trend summaries and configurable demo rules. Every result must show the method, inputs, time window, data source and limitations.
+
+Keep data sources distinct: SIMULATION, PUBLIC_RESEARCH_ECG, and FUTURE_AUTHORIZED_EXPORT (disabled; documentation only). Never imply the future source exists today.
+
+Treat missing data as null/unavailable, never silently convert missing values to zero or to a normal finding. Preserve units, timestamp, sampling rate, annotation source and provenance.
+
+Use fictional identifiers and synthetic values for all simulation sessions. No real patient identifiers or credentials. Do not upload data to third-party APIs. No API keys or secrets are needed for the local-first release.
+
+Never state or imply diagnosis, treatment advice, emergency rescue, live implant monitoring, clinical validation, medical-device certification or implant compatibility.
+
+Use accessible responsive layouts and consistent units. Every simulated device or physiological view must carry the persistent label “RESEARCH SIMULATION — NOT A MEDICAL DEVICE.” Synthetic SpO₂ must be called “Simulated SpO₂.” Battery calculations must be labelled “Battery Simulation — Engineering Model.”
+
+Do not overwrite existing work blindly. Inspect the current project, list proposed file changes, preserve previously working features, implement only the current stage, and update tests/docs accordingly.
+
+PROMPT 0 — Audit the supplied references and convert them into a build plan
+
+You are joining a project that must be built from the supplied HealthHeart/LeadlessGuard development guide, the earlier staged feature prompt text, and the attached HeartGPT README. Before coding, inspect all files available in the workspace. If any source is not accessible, say which file is missing instead of pretending to have read it.
+
+Create docs/source_requirements_map.md and docs/scope_and_claims.md. The requirements map must consolidate duplicate statements into one canonical requirement and map each requirement to exactly one implementation prompt and one verification method. Cover the deterministic pacing simulator; synthetic ECG; PPG/Simulated SpO₂; BIA; multi-signal timeline; dashboard and pages; read-only mock telemetry; roles and approval gate; local security scenarios; append-only audit history; battery duty-cycle model; eight predefined scenarios; public ECG CSV/JSON import; deterministic signal-quality and trend functions; exports; testing; accessibility; and documentation/deployment.
+
+Review HeartGPT accurately from the attached README and its repository/paper links. Record that it is a pretrained-transformer research project for ECG/PPG time series. Because HealthHeart will not use learned models, put it in the plan only as a linked related-work citation. Do not claim that its code, weights, datasets or GUI are integrated. Confirm that references can be displayed without copying its visual assets or code.
+
+Deliver: (1) a plain-language project summary, (2) a feature-to-stage matrix, (3) a list of duplicate requirements merged, (4) an explicit list of out-of-scope functionality, (5) unresolved assumptions, (6) a proposed folder tree and (7) a staged implementation plan. Do not implement the feature modules yet. Stop after the report.
+
+Acceptance: no omitted non-model features from the supplied prompt text, no duplicated feature stage, no model-related runtime requirement, and no statement that the project is clinically validated.
+
+PROMPT 1 — Set up the project and confirm the development environment
+
+Continue in the same workspace. If there is no application yet, scaffold a single React + TypeScript + Vite website named healthheart. Before running commands, inspect the current directory and avoid overwriting an existing project. Use official installation documentation for Node.js LTS, Git and the editor. Provide beginner-friendly instructions for Windows PowerShell as well as the exact commands used.
+
+Use a small, justified dependency set. Use React, TypeScript and Vite for the app; choose one charting library for charts; use a schema validator for external/imported records if helpful; use Vitest and React Testing Library for tests. Add Playwright only if end-to-end browser tests can actually be maintained. Configure linting, formatting and TypeScript type-checking separately because a Vite build alone must not be treated as a type-check result.
+
+Add working scripts for development, type-checking, linting, unit tests and production build. Create a short root README with setup, run, test and build instructions. Confirm the app starts and display the local URL. Do not add signal, device or security features in this stage. Do not add an external API, database service, login provider, network telemetry or secret configuration.
+
+Acceptance: npm install, development startup, type-check and production build instructions are documented; scripts exist; a clean starter page loads; the existing project was preserved if it already existed.
+
+PROMPT 2 — Establish architecture, shared contracts and source provenance
+
+Implement the architecture foundation only. Use clear modules and typed interfaces. Create or update the folder structure below, adapting to the existing code rather than duplicating folders:
+
+src/  app/                 # app shell, router/navigation, persistent safety label  components/          # reusable cards, charts, tables, status labels, dialogs  pages/               # Dashboard, ECG, Signals, Device, Trends, Alerts,                       # Security, Audit, Research, Data Import, Sources, Settings, About  types/               # shared data contracts, enums, event and audit records  domains/    pacingSimulation/  # deterministic fictional pacing logic    signals/            # synthetic ECG, PPG, SpO2 and BIA generators    telemetrySimulation/ # read-only mock packets and validation    analysis/           # deterministic signal-quality, measurements and trends    alerts/             # rule-based simulation alert logic    security/           # local threat-test harness and mock session state    audit/              # timestamped audit history    batteryModel/       # fictional engineering duty-cycle calculations    research/            # scenarios, imported-record metadata and test results  services/             # local storage, import/export, clock and seeded random source  data/                 # fictional fixtures and public-data sample schema only  styles/               # tokens, responsive rules, contrast and print styles  tests/                # unit, integration and safety-boundary testsdocs/                   # architecture, data dictionary, threat model, test and limitations
+
+Define the canonical data-source enum as SIMULATION, PUBLIC_RESEARCH_ECG, and FUTURE_AUTHORIZED_EXPORT_DISABLED. The future type is a documentation reservation only; do not provide a working adapter or connection path for it. Every record must preserve source, observation time in UTC, units, data quality, schema version and provenance. For sampled signals, store sampling frequency, channel/lead label and original unit if known. Missing fields are nullable and must not be filled with invented values.
+
+Create docs/architecture.md, docs/data_dictionary.md, docs/safety_boundaries.md and docs/feature_status.md. Include a Mermaid data-flow diagram showing source → validation/quality gate → deterministic analysis → presentation/export. Show the simulated pacing domain, read-only telemetry gateway and website as separate trust domains. The website must never write telemetry back to the simulated pacing core through the read-only path.
+
+Acceptance: types compile, architecture diagrams match the actual code structure, source provenance survives a complete data flow, and every visible placeholder is marked as planned/not implemented rather than being shown as working.
+
+PROMPT 3 — Build the deterministic simulated pacing engine
+
+Implement a reproducible software-only model for a fictional leadless-pacemaker concept. This is not a model of any specific manufacturer's firmware. Use a seeded random generator where variation is needed; the same seed and settings must produce the same output. Keep the engine separate from React components and telemetry presentation.
+
+Include fictional device identity, model label, simulator version, session ID and event counter. Simulate intrinsic ventricular events, RR intervals, rate summaries, sensed events, missed intrinsic events, paced markers, pacing percentage, simulated capture-status labels, simulated diagnostics, fictional temperature/impedance readings and a fictional battery state. All device identifiers and firmware/protocol labels must be plainly fictional.
+
+Add parameters only for the simulation (including an explicitly labelled demo lower-rate threshold if used). Do not output real electrical stimulation instructions, pulse amplitude/width, electrode geometry, energy delivery, implant programming commands or vendor-specific device settings. Model behavior using transparent documented rules. Make event ordering and the simulation clock deterministic. Provide start, pause, step-forward and safe-reset operations; reset must clear the scenario consistently without erasing the application source code or unrelated local settings.
+
+Provide selectable starting conditions: normal intrinsic rhythm, complete-heart-block-like pattern, bradycardia-like pattern, irregular intervals, tachycardia-like pattern, intermittent conduction, noisy input and signal dropout. Describe these as synthetic patterns, not patient diagnoses.
+
+Each event contains event ID, UTC timestamp, event type, source=SIMULATION, simulated rate if available, simulated pacing state and sequence number. Add unit tests for event order, RR interval math, pacing percentage math, deterministic replay, pause/reset behavior and missing-value handling.
+
+Acceptance: standalone domain tests pass; UI components cannot mutate the core except through the documented simulation-control interface; no real device communication or therapy command exists.
+
+PROMPT 4 — Create the synthetic ECG and cardiac-event visualization
+
+Build a synthetic waveform generator, not a diagnostic ECG generator. Generate configurable ECG-like P/QRS/T shapes with RR intervals, heart-rate variation, baseline wander and measurement noise. Make waveform generation deterministic for a selected seed and settings. Include simulated markers for intrinsic/sensed events, simulated pacing events, algorithmically detected QRS candidates, missed-event markers and noise/artifact regions.
+
+Provide controls for demonstration settings only: simulated rate, variability, noise, baseline drift, illustrative conduction delay, pacing-event occurrence, playback speed and display window. Include scrolling playback, pause/resume, zoom, simulated-lead selector, grid, time scale, amplitude scale and marker legend. The label must remain visible in collapsed, expanded and exported views. Do not label the waveform as clinical ECG, 12-lead ECG, validated ECG or a patient's recording.
+
+Add a cardiac-event explainer panel with the fixed conceptual flow: fictional intrinsic event → simulated sensing → transparent simulation rule → simulated paced marker or no pacing event → recorded event. Make clear this is a software illustration rather than an engineering specification for an implant.
+
+Allow CSV and JSON export with timestamps, sampling frequency, amplitude units, source, seed/scenario metadata and software version. Write tests for sampling/time-axis consistency, RR calculations, marker placement and dropout gaps. Do not implement learned generation or copy HeartGPT source/model artifacts.
+
+Acceptance: plotted time and sample counts match metadata; missing intervals remain gaps; exported files preserve source labels; screen readers receive a useful chart summary or data-table alternative.
+
+PROMPT 5 — Add PPG and Simulated SpO₂
+
+Create a separate deterministic PPG simulation module. It may include pulse-like waveform variation, amplitude modulation, respiratory-like modulation, baseline drift, motion artifact, noise and sensor disconnect. Do not connect to the phone camera or imply the phone can measure a clinical oxygen saturation. There is no real sensor connection in this version.
+
+Calculate a simulated pulse rate from the simulator's detected PPG peaks only when the signal quality and interval data satisfy documented preconditions. Make the method visible. Display Simulated SpO₂, its fictional value, selected-window trend, minimum/maximum, data source, timestamp and quality. These numbers are fictional and must never be described as measured or medically accurate.
+
+Use the quality states Good, Acceptable, Poor and Signal unavailable, with documented deterministic criteria. Create fault controls for motion artifact, poor contact, disconnected sensor, low amplitude, out-of-range synthetic values and packet loss. Poor/unavailable signal quality must visibly mark the rate/value unreliable rather than continuing to show a green status. Out-of-range values must trigger validation errors or a clearly labelled invalid-data state; they must not silently be clipped into plausible measurements.
+
+Export the samples and calculation metadata. Test peak timing, derived pulse rate, missing samples, quality-state transitions, unavailable values and invalid input. On all pages, the displayed source is SIMULATION.
+
+Acceptance: no device API or real sensor is queried; the interface clearly distinguishes simulated values from future external-sensor data; tests cover faults and gaps.
+
+PROMPT 6 — Add the BIA concept simulation and synchronized multi-signal timeline
+
+Create a research/education-only synthetic bioelectrical impedance (BIA) waveform module. Simulate a fictional baseline, low-level variation, respiration-like modulation, noise and artifacts. Use neutral naming such as simulatedImpedance and state that the value is not a clinical BIA measurement. Do not claim the simulator measures fluid status, heart failure or any disease.
+
+Include fault states: disconnected channel, movement artifact, noisy signal, missing samples and unstable baseline. Calculate simple documented descriptive summaries (e.g., rolling median/mean, range, baseline difference and signal-quality state) only when the input is valid. Avoid presenting an unsupported clinical interpretation of impedance values.
+
+Build one interactive multi-signal timeline that can overlay synthetic ECG, PPG, Simulated SpO₂, simulated BIA, simulated heart rate and pacing-event markers. Align by timestamp/sample rate; never align streams by array index alone if their rates differ. Offer visibility toggles, zoom, time-window control and per-channel units/source/quality metadata. When timebases differ, show the alignment method and any resampling/aggregation explicitly. Keep missing regions visible.
+
+Test that timestamps are aligned correctly, hidden series do not change data, no invalid interpolation fills long gaps, and each channel keeps its units and provenance. This prompt owns the BIA module and synchronized multichannel visualization so that these features are not recreated in later prompts.
+
+Acceptance: all channels have visible source/time/quality labels, the visualization survives missing/disconnected inputs, and all BIA outputs are labelled synthetic.
+
+PROMPT 7 — Build the complete responsive website UI and navigation
+
+Create the real user interface on top of existing domain modules; do not repeat or rewrite their business logic. Use a professional clinical-research aesthetic with clean hierarchy, readable typography, restrained colors, responsive cards and clear status text. Keep a persistent banner on every relevant screen: “RESEARCH SIMULATION — NOT A MEDICAL DEVICE.” Use a separate persistent label for “Battery Simulation — Engineering Model.”
+
+Create these pages and wire them to actual data:
+
+Dashboard: fictional session ID, simulation state, connection/last-sync state, simulated heart rate/rhythm label, intrinsic event rate, pacing percentage, Simulated SpO₂, miniature ECG/PPG/BIA previews, fictional device/battery/sensing/telemetry status, recent simulation alerts and a short deterministic-rule explanation.
+
+ECG: complete scrolling synthetic ECG, scenario controls, markers, time/amplitude scales, zoom/pause and export.
+
+Signals: synchronized ECG/PPG/Simulated SpO₂/BIA/heart-rate/pacing overlay.
+
+Device: fictional device identity, event counters, simulated sensing/pacing status and engineering battery model. No patient serial numbers or real device identifiers.
+
+Trends: time-window selector for 1 hour, 6 hours, 24 hours, 7 days and 30 days.
+
+Alerts: simulation alert history and acknowledgement/resolution workflow.
+
+Security: local mock session, accepted/rejected/duplicate/malformed packet counters and threat-test controls.
+
+Audit: timestamped local event history, filters and export.
+
+Research: scenario library, simulation controls, input quality, results and export.
+
+Data Import: supported CSV/JSON import with preview, validation errors and provenance entry.
+
+Sources & Related Work: data-source citations, dataset attribution and HeartGPT reference card clearly marked external/not integrated.
+
+Settings/About: units, accessibility, simulator seed and parameter defaults, limitations, feature-status legend and app version.
+
+Use one navigation system and one shared state/data service. Do not make dashboard cards merely decorative. Use keyboard navigation, semantic headings, focus indication, text alternatives for plots, non-color status labels and reduced-motion support. Avoid fake live connection indicators; every connection state must correspond to the simulator or be labelled unavailable.
+
+Acceptance: all navigation works, all pages show actual or explicitly marked placeholder content, the layout adapts to phone/tablet/desktop, and no page describes clinical decisions or model output.
+
+PROMPT 8 — Create read-only simulated telemetry and trust-boundary enforcement
+
+Create a local-only telemetry simulation path. It may visually demonstrate a generic phone → mock link → telemetry gateway → simulated device telemetry → display flow, but must not use Web Bluetooth, Bluetooth scanning, actual GATT services, manufacturer-specific identifiers, implant radios or a real device connection. Label the flow MOCK TELEMETRY — LOCAL SIMULATION.
+
+Add a mock enrollment flow with a locally generated one-time out-of-band (OOB) demo token, a QR graphic that contains only a fictional simulator enrollment payload, and an NFC-enrollment status controlled by an explicit simulator button. These are UI states only: do not open the camera, invoke phone NFC, use Web Bluetooth or connect a second device. The demo token must not be a real credential.
+
+Define a versioned typed envelope with: source=SIMULATION, simulated=true, schema version, session ID, message ID, monotonically increasing sequence number, UTC observation time, signal type, units where relevant, quality status and payload. Validate type, timestamp, sequence, expected session, device identity placeholder and required fields before processing. Reject duplicate/out-of-order, expired, malformed, wrong-session and tampered test packets. Never turn a missing value into zero. The data path is read-only.
+
+Make three trust domains explicit: (1) simulated pacing core, (2) telemetry gateway, (3) website/user interface. No command or write method may exist from the telemetry stream to change pacing state. A separate research-only configuration workflow must be: request change → show proposed old/new fictional value → explicit review → explicit authorized demo approval → change simulator-only state → audit record. This workflow must not be reachable through ordinary telemetry packets.
+
+Provide local demo roles: Viewer, Researcher, Clinician-Simulation and Administrator. These are educational role simulations, not real identity verification or production access controls. Unauthorized role actions must be denied in domain logic, not merely hidden in the UI. Write boundary tests proving that packet injection and ordinary UI controls cannot bypass review or mutate the simulator directly.
+
+Acceptance: packets carry provenance and versions, invalid packets are rejected before state changes, telemetry is read-only, and no actual implant communication code exists.
+
+PROMPT 9 — Implement the local security demonstration and audit history
+
+Build a defensive test harness operating exclusively on locally generated mock messages. It must not scan networks, attack remote services, use real credentials, implement malware or provide real-world exploit instructions. Describe it as an educational simulation, not a security certification.
+
+Implement bounded test cases for: altered message; unauthorized mock pairing; replayed/out-of-order packet; malformed payload; expired session; wrong mock identity; bounded packet burst/resource pressure; fictional session/key-compromise flag; unauthorized configuration request; telemetry marked untrusted/inconsistent; and a fictional invalid update-status flag. An “OTA/update” demonstration is only an inert status event—do not implement firmware delivery or update mechanisms.
+
+Add a security-learning panel mapping OOB enrollment, ephemeral key agreement, session-key derivation, authenticated message integrity, monotonically increasing counters, replay rejection and session expiry to what the local simulator actually does. A hardware-backed-key provider may exist only as an interface marked UNAVAILABLE IN THIS DEMO; do not claim hardware-backed protection. If message integrity is demonstrated with cryptography, use vetted platform/library primitives such as Web Crypto for the local demonstration and test the implementation. Do not invent ciphers or call a mock result real device encryption. If the implementation cannot be completed correctly, keep the feature explicitly conceptual rather than claiming cryptographic security. Never store or display real passwords or keys.
+
+Create a local append-only audit view. Each entry should contain UTC timestamp, event ID, category, fictional actor/role, domain, result, severity, correlation ID, session/message ID, source label and redacted details. A hash-chain/integrity illustration may be included only if implemented and tested; call it a tamper-evidence demonstration, not guaranteed tamper-proof storage. Provide filters and CSV/JSON export. Every threat test should show expected vs actual outcome, status (PASS, FAIL, BLOCKED, NOT TESTED) and related audit event.
+
+Acceptance: each test affects only mock data; rejected packets do not alter simulator state; all actions are auditable; UI labels do not overstate protection.
+
+PROMPT 10 — Build transparent deterministic signal-quality and analysis functions
+
+This stage replaces all previous learned-model or model-analysis requirements. Implement only deterministic, human-readable calculations using documented formulas and transparent rules. Do not include trained classifiers, a prediction engine, transformer/tokenizer code, generative output or medical diagnosis.
+
+Implement reusable functions that can analyze supported synthetic signals and imported public research records when the input metadata is complete:
+
+Input/data quality: missing proportion, duplicate timestamp detection, irregular sample spacing, invalid units/rates, clipping or out-of-range sample checks, stale stream state and channel disconnection. Return Good, Acceptable, Poor or Unavailable with reason codes and details.
+
+Descriptive cardiac timing: RR intervals from accepted event candidates/annotations, instantaneous/mean/median heart-rate calculations from RR intervals, counts of detected candidate events, and descriptive RR variability where enough valid intervals exist. State the formula and number of included/excluded intervals.
+
+Signal summary: mean/median/min/max/range and documented rolling summaries for the selected window. Only calculate when sufficient valid data exists; otherwise return unavailable plus a reason.
+
+Trend flags: compare a metric with an explicitly selected baseline/window, report absolute/relative change and window metadata, and apply configurable software-test rules. These flags are engineering/demo outputs, not clinical thresholds.
+
+Cross-signal summaries: time-aligned descriptive comparison of channels where units/timestamps permit. Do not imply causation. Never infer SpO₂ from ECG, BIA, or a phone.
+
+Every output must carry source type, input quality, start/end time, algorithm/rule version, formula or rule name, values used, excluded-data reason and a limitations string. Use wording such as Rule-based demo flag: the synthetic rate series changed relative to the selected baseline. Do not use terms such as diagnosis, patient risk score, clinical probability, clinically validated prediction or unsubstantiated model confidence.
+
+Acceptance: functions are pure/testable where possible; calculations are reproducible; invalid or insufficient input returns unavailable rather than a reassuring conclusion; unit tests cover known-answer cases and missing/invalid data.
+
+PROMPT 11 — Add longitudinal trends and rule-based simulation alerts
+
+Build on Prompt 10's calculations; do not duplicate its metrics or develop a second trend engine. Provide shared time windows of 1 hour, 6 hours, 24 hours, 7 days and 30 days for available local demo history. The interface must state if a window has insufficient saved observations rather than fabricate a history.
+
+Track synthetic heart-rate summaries, pacing percentage/event counts, Simulated SpO₂, PPG pulse rate, BIA summaries, signal quality, fictional battery model state and telemetry reliability. Public ECG imports can appear in their own research context and must never be mixed into a synthetic device session without a visible source boundary.
+
+Create only explicit rule-based simulation alerts: synthetic sustained rate-pattern rule triggered; simulated pacing-percentage change; poor ECG/PPG quality; simulated SpO₂ value or trend test condition; missing/stale telemetry; repeated local security-test failures; fictional engineering-battery budget exceeded. Use severities Information, Warning and Critical Simulation Alert. All thresholds are demo configuration values and must be named as such; do not copy clinical cutoffs or present them as medical guidance.
+
+Every alert must show what happened, when, source signal, time window, input quality, rule identifier/version, supporting values, whether additional confirmation is needed for the software test and the statement that it is simulated. Support acknowledge, resolve, add a comment and open the associated audit record. Record each action in the audit history.
+
+Acceptance: trends derive from saved/generated observations, no alert is described as an emergency or diagnosis, each action is auditable, and gaps/stale data do not generate a normal/clear state.
+
+PROMPT 12 — Add the fictional battery and duty-cycle engineering model
+
+Create a purely educational, fictional energy-budget model for the simulated system. Do not use specifications from Micra, AVEIR or another actual implant and do not estimate real pacemaker battery longevity. Keep this model isolated from any device-safety claim.
+
+Use clearly fictional configurable inputs for initial budget and activity costs, including simulated pacing-event count, mock telemetry transmissions, sensor sampling activity, wake windows and idle time. Model the cycle: deep-sleep representation → mock telemetry wake window → sensor sampling → processing → return to idle. Compare fictional scenarios: continuous mock telemetry, periodic telemetry, low-duty-cycle telemetry, high sensor use and repeated connection attempts.
+
+Display remaining fictional budget/percentage, modeled duration in the selected simulation scenario, component/activity breakdown, wake time and budget-exceeded warning. Every screen, chart and export must include the label “Battery Simulation — Engineering Model; not an estimate of any real implant battery life.” Show the formula and assumed units so the results can be reproduced. Do not infer an actual battery percentage from device family/model.
+
+Add tests for deterministic calculations, zero/invalid inputs, monotonic budget decrease under positive modeled use, reset behavior and comparisons across activity profiles. Link the repeated-connection scenario to the local resource-pressure simulation without creating actual wireless requests.
+
+Acceptance: every value is visibly fictional; units/formula are documented; the module cannot send requests to a device or affect real hardware.
+
+PROMPT 13 — Create the Research workspace and eight canonical scenarios
+
+Create a single Research workspace that composes existing modules. Do not implement a second version of the ECG generator, trend engine, alert engine, telemetry or battery calculations. The workspace selects a fictional session, selects an existing scenario, starts/pauses/resets the deterministic clock, allows demo-only parameter changes and displays all signals, event markers, quality results, telemetry counters, alerts, audit events and deterministic analysis. Support export with experiment metadata.
+
+Implement these eight named scenarios with documented starting conditions, expected signals, expected telemetry, expected alerts, expected rule-based analysis, expected audit events and verification tests:
+
+A — Complete-heart-block-like synthetic pattern: fictional intrinsic event pattern is absent or uncoupled; expected pacing markers depend only on the documented simulation rule.
+
+B — Intermittent conduction: alternate fictional intrinsic/missed intervals with correctly ordered timestamps.
+
+C — Low intrinsic rate / increased simulated pacing burden: a demo configuration causes a higher simulated pacing percentage; no patient inference.
+
+D — Stable intrinsic rhythm: stable synthetic intervals; must not be presented as a clinical all-clear.
+
+E — Noisy ECG/PPG: signal quality degrades and affected values are marked unreliable.
+
+F — Telemetry failure: mock stream pauses or packets are dropped; show stale/unavailable state and log a connection-loss simulation alert.
+
+G — Replay attempt: resend an old local mock packet; reject it, increment the security counter, and leave the simulator state unchanged.
+
+H — Battery/resource budget stress: increased mock wakeups and simulated sensor activity consume the fictional engineering budget faster.
+
+Add a Reset to Safe Simulation State action with a confirmation summary. Every scenario must be deterministic on reset with the same seed. Add scenario-level tests comparing expected/actual conditions. The scenario results page must use PASS, FAIL, BLOCKED or NOT TESTED—never assume success without running the checks.
+
+Acceptance: all eight scenarios are selectable, repeatable, exportable and testable; none is presented as a clinical case or real patient's data.
+
+PROMPT 14 — Add public ECG import and the HeartGPT related-work reference
+
+Create a conservative public-research ECG workflow, not a clinical diagnostic feature. Start by supporting a documented CSV/JSON format with explicit columns or schema for sample index/time, amplitude, sample rate, unit, channel name, optional annotation label, annotation source, source URL, database/record identifier and licence/citation. Validate the file and present a preview, metadata editor and specific row/field errors before import. Do not label a file PUBLIC_RESEARCH_ECG until the user confirms the provenance fields. Keep raw input unmodified and store derived working data separately.
+
+Use PhysioNet's MIT-BIH Arrhythmia Database as a documented example source. Link to its official page, record its Open Data Commons Attribution License v1.0, and require users to preserve its attribution/citation terms. Do not redistribute a full dataset inside the website without checking its terms. Do not pretend the browser directly parses PhysioNet .dat waveform files unless that parser is actually implemented and tested. If needed, document a separate optional Python/WFDB conversion route that exports a defined CSV format; it is a utility, not another UI/dashboard. Do not automatically download data at runtime.
+
+For imported ECG, display the waveform with true time axis/sample rate/channel units and optional supplied reference annotations. Implement simple deterministic signal quality, event-candidate and descriptive RR measurements only if metadata supports them. Compare event candidates to reference annotations only as a research utility, with a transparent matching tolerance and counts for true/false/missed candidates; clearly explain that this is an engineering evaluation, not clinical validation. Do not classify atrial fibrillation or other diseases.
+
+HeartGPT reference integration: add an external related-work card that links to https://github.com/harryjdavies/HeartGPT and https://arxiv.org/abs/2407.20775. Summarize accurately that the external work describes pretrained ECG/PPG transformer models and interpretation/generation/fine-tuning tools. Label the status REFERENCE ONLY — NOT EMBEDDED IN HEALTHHEART. Do not copy or execute its model code, tokenization, checkpoints, figures or outputs. Do not imply collaboration, endorsement, model integration or that the paper's reported results are HealthHeart results. Include its repository MIT license link for transparency, but also note that any future asset/code reuse requires a file-level license/provenance review and retention of required notices.
+
+Acceptance: imported files retain provenance; missing metadata blocks or warns clearly; user-uploaded waveform sources stay distinct from synthetic sessions; HeartGPT is acknowledged accurately but no model runtime/dependency is added.
+
+PROMPT 15 — Implement local persistence, experiment records and export/import
+
+Add local-first persistence for fictional settings, scenario runs, alert acknowledgements/comments, local audit entries, and research import metadata. Use IndexedDB for potentially large waveform/series data and a small settings store for preferences where appropriate. Do not save real patient data, credentials, passwords, implant identifiers or secrets. Provide a clear local-data reset/delete control and document where the browser stores information and the limits of local browser persistence. Do not claim local browser storage is encrypted or tamper-proof.
+
+Create an experiment record with a generated fictional session ID, created time, app version, simulator version, selected scenario, seed, simulation parameters, data sources, active faults, rule versions, data-quality summary, alert list and test results. Record imported research data with source URL, dataset/record identifier, license, citation, sampling frequency, channel, units, annotation provenance and imported filename; avoid storing unnecessary personal metadata from files.
+
+Support CSV and JSON export for synthetic waveforms, public research excerpts that users imported, summary metrics, scenario metadata, alerts and audit events. Exports must preserve source labels, UTC timestamps, units, sample frequency and algorithm/rule version. Use safe file names and document the export schema. Provide a JSON import/export round-trip for simulator configuration and scenario metadata; never accept imported configuration that adds a real-device pathway or bypasses validation.
+
+Acceptance: persistence survives an app refresh where supported, deletion/reset behaves as described, exported files validate against a schema and round-trip tests preserve key provenance fields.
+
+PROMPT 16 — Build a complete verification suite and visible test-results page
+
+Create unit, integration and UI tests for the implemented software. Keep tests local and synthetic. Add tests in the same phase as the feature where practical, then consolidate results here. The Tests page should show actual run date, command, status and concise failure output. Do not hard-code PASS in the dashboard or make test results appear successful without execution.
+
+Cover:
+
+Core and simulation: seeded repeatability, event ordering, RR/heart-rate math, pacing-percentage math, start/pause/step/reset, all scenarios.
+
+Signals: waveform time axis, sample rates and units, marker placement, PPG peak calculation, simulated SpO₂ boundaries, BIA summary, noise/dropout and missing samples.
+
+Data quality/import: malformed CSV/JSON, wrong column names, unsupported units, invalid timestamps, duplicate/out-of-order samples, missing metadata, poor quality and large-file limits.
+
+Telemetry/security: invalid schema, wrong identity/session, duplicate/out-of-order/replay, expired packet, altered payload, malformed payload and bounded flood. Confirm rejected messages cannot change simulated pacing state.
+
+Authorization/audit: viewer/researcher/simulation-clinician/admin demo role checks; unapproved configuration requests denied; approved demo changes show old/new value and audit record; audit export matches displayed event history.
+
+Analysis/trends/alerts: known-answer calculations, insufficient-data behavior, baseline comparisons, alert generation/resolution and stale-data cases.
+
+Persistence/export/UI: reload, delete/reset, CSV/JSON schema, route navigation, responsive controls, keyboard operation, label visibility, chart data table/summary and errors.
+
+Boundary checks: no real Bluetooth/Web Bluetooth/implant communication dependency or therapy command; no learned-model/checkpoint/tokenizer dependency; no page claims diagnosis, validated prediction or actual battery life.
+
+Use PASS, FAIL, BLOCKED and NOT TESTED accurately. Add a requirements-to-test traceability matrix in docs/verification_matrix.md. If browser automation is unavailable, report that limitation and provide manual steps.
+
+Acceptance: test commands are documented, tests run or explicitly marked not run, and every failed test has a reproducible explanation and next step.
+
+PROMPT 17 — Finish UI quality, accessibility and user-facing safeguards
+
+Audit the website as a beginner, a keyboard-only user and a reviewer viewing screenshots. Do not add features outside the agreed scope. Fix responsive behavior, spacing, typography, chart legends, empty/error/loading states, data-source badges, label visibility and the information hierarchy. Ensure every non-trivial chart can also be understood through a table, summary or accessible description. Do not rely on red/green alone; pair colors with text/icons/patterns. Make focus visible, dialogs keyboard-operable, forms labelled, validation errors connected to fields, and animation compatible with reduced-motion settings.
+
+Run a page-by-page checklist for Dashboard, ECG, Signals, Device, Trends, Alerts, Security, Audit, Research, Data Import, Sources, Settings and About. Test narrow mobile, tablet and desktop widths. Confirm persistent simulation warnings remain visible after scrolling and in fullscreen charts; export data keeps source metadata. Remove any leftover learned-model panels, model probability/confidence outputs, disease prediction, direct implant pairing, true live connection or clinical alarm wording inherited from older prompts. Replace it with the exact transparent analysis/source labels.
+
+Avoid fake branding or claims that this project is sponsored by a manufacturer, PhysioNet or the HeartGPT authors. The related-work card must be clearly identified as external work. Do not copy paper figures or external branding assets into the app.
+
+Acceptance: the experience is consistent and usable across supported sizes; important content is accessible without color or mouse-only interaction; there are no misleading clinical or endorsement claims.
+
+PROMPT 18 — Write complete technical, research and licensing documentation
+
+Document only what has actually been implemented. Create/update the files below, adding detail where useful without creating duplicate documents that disagree:
+
+README.md: project purpose, scope, install/run/test/build, data sources, screenshots if available, export formats, limitations and citation links.
+
+docs/architecture.md: system components, domain boundaries, data flow and Mermaid diagrams.
+
+docs/data_dictionary.md: each field, units, nullability, source, timestamps, sampling rate and validation rules.
+
+docs/simulation_rules.md: formulas, seed behavior, scenario starting conditions and limits.
+
+docs/signal_processing.md: deterministic processing, filters/parameters, event-candidate rules, units and failure behavior.
+
+docs/data_provenance_and_licences.md: dataset citations, licence names/URLs, asset inventory and third-party notices.
+
+docs/heartgpt_related_work.md: concise summary, direct repository/paper/license links, exact non-integrated status and why no model/code/checkpoint is embedded.
+
+docs/threat_model.md: local simulated threat, threat vector, affected domain, expected rejection, mitigation, audit event and test ID.
+
+docs/audit_schema.md: fields, retention/deletion behavior and limitations of local append-only history.
+
+docs/simulator_interface.md: typed simulator-control interface and read-only telemetry contract; explicitly list forbidden write/implant interfaces.
+
+docs/local_storage_schema.md: IndexedDB/settings schemas, local retention and deletion semantics.
+
+docs/algorithm_cards.md: formula/rule, input fields, preconditions, test evidence and limits for each deterministic analysis function.
+
+docs/verification_matrix.md: requirement, test, command, status, evidence and unresolved issue.
+
+docs/risk_and_limitations.md: software hazards, failure modes, known limitations and prohibited uses.
+
+docs/research_protocol_notes.md: narrow reproducible research questions such as signal visualization, signal-quality handling or event-candidate comparison against reference annotations; dataset/version/licence/citation; methods; metrics; exclusions; and limits of generalization. No clinical risk prediction or claims about people.
+
+CHANGELOG.md: staged changes and any breaking changes.
+
+The documentation must state that the published HeartGPT work is related prior research only; HealthHeart does not run or reproduce its transformer models. Do not copy its result numbers into HealthHeart performance claims. If the MIT-BIH dataset is used, cite the dataset documentation and preserve attribution under its stated license. Do not make broad legal/regulatory claims. State that any future real-patient use, device connection or clinical deployment would require separate expert, institutional, privacy, security and applicable regulatory review. Include the official Indian sources below as review starting points only: CDSCO Medical Devices Rules, 2017; CDSCO Medical Device & Diagnostics guidance; MeitY data-protection framework; and CTRI. Do not infer a legal classification or claim a specific approval/registration is or is not required from this prompt pack. The current version uses only synthetic and user-imported public research data and must not initiate patient recruitment or real-device access.
+
+Acceptance: every listed file matches reality, has working links, and no document conflicts with the website's actual feature status.
+
+PROMPT 19 — Final end-to-end review, build, and deployment readiness
+
+Perform the final review of the same codebase. Do not rewrite it wholesale. Inspect actual files and run the available checks. Identify critical, high, medium and low-priority issues, tests needed, remaining limitations and any requirement not met. Patch only safe defects within the simulation/research scope, then rerun affected tests.
+
+Run and report exact outcomes for: dependency installation where feasible; TypeScript type-check; lint; unit/integration tests; scenario tests; production build; route/page smoke tests; CSV/JSON import/export validation; responsive and accessibility checks; and the boundary search/review for any accidental device-control or learned-model code. If a command cannot be run in the current environment, mark it BLOCKED or NOT TESTED and give the command and manual steps. Attach no invented test results.
+
+Verify the eight canonical scenarios and their expected behaviors. Verify: synthetic data always carries source labels; public ECG data retains dataset/record/units/sampling/provenance; HeartGPT remains a related-work citation only; all analysis is deterministic and formula/rule-based; no learned model/checkpoint/tokenizer is installed; no real BLE/GATT or implant adapter exists; no therapy-control path exists; bad/missing packets cannot change simulator state; all configuration changes require explicit research approval and audit; missing observations never appear as normal; battery estimates are fictional engineering output; no screen says the product is clinically validated or diagnoses/predicts a disease.
+
+Create docs/final_acceptance_report.md with: requirement checklist, exact tests/commands and outcomes, screenshots or manual test evidence where available, known defects, blocked work, data/licence notes, security boundary findings, limits and next steps. Update the root README with the confirmed launch/test/build instructions. If deployment is requested, prepare a static production build suitable for a platform such as Vercel, but do not publish it or claim a public URL without explicit authorization and an actual successful deployment. The website must not require any private API keys or send data off-device.
+
+Acceptance: a clean build is reproducible, every feature status is evidence-backed, limitations are prominent, and the final review does not overstate medical, scientific, security or legal validity.
+
+Final source and attribution checklist
+
+HeartGPT repository and README: https://github.com/harryjdavies/HeartGPT
+
+HeartGPT paper (Davies HJ, Monsen J, Mandic DP. *Interpretable Pre-Trained Transformers for Heart Time-Series Data*. arXiv:2407.20775, 2024): https://arxiv.org/abs/2407.20775
+
+HeartGPT repository license page: https://github.com/harryjdavies/HeartGPT/blob/main/LICENSE
+
+PhysioNet MIT-BIH Arrhythmia Database and citation/license instructions: https://physionet.org/content/mitdb/1.0.0/
+
+PhysioNet MIT-BIH Atrial Fibrillation Database (only if used): https://physionet.org/content/afdb/1.0.0/
+
+React: https://react.dev/learn
+
+Vite: https://vite.dev/guide/
+
+TypeScript: https://www.typescriptlang.org/docs/
+
+Vitest: https://vitest.dev/guide/
+
+CDSCO Medical Devices Rules, 2017: https://cdsco.gov.in/opencms/opencms/en/Acts-and-rules/Medical-Devices-Rules/
+
+CDSCO Medical Device & Diagnostics guidance index: https://www.cdsco.gov.in/opencms/opencms/en/Medical-Device-Diagnostics/Medical-Device-Diagnostics/
+
+MeitY data-protection framework: https://www.meity.gov.in/data-protection-framework
+
+Clinical Trials Registry–India: https://ctri.nic.in/
+
+These Indian regulatory/privacy links are starting points for future expert review, not legal advice or a determination that any particular rule, approval or registry requirement applies to this simulation. Recheck current official notices if the intended use changes.
+
+The HeartGPT repository's README describes ECGPT/PPGPT pretrained models, fine-tuning examples, tokenization, generation and interpretation tooling. This website does not integrate those model components. The MIT-BIH repository states the MIT-BIH Arrhythmia Database is under Open Data Commons Attribution License v1.0 and provides required citations; follow the current source page. Review source conditions again before distribution.
+
+Final product description to use
+
+HealthHeart is a research and educational website for deterministic leadless-pacemaker concept simulation, synthetic cardiac-signal visualization, transparent rule-based signal-quality and trend analysis, public ECG record exploration, and local cybersecurity test demonstrations. It does not connect to or control a real implant, provide clinical diagnosis, or claim clinical validation. HeartGPT is cited as external related work and is not embedded in the application.
+
+Global execution instruction to reuse when prompting the coding agent
+
+Work sequentially in the same repository. Before each stage, inspect the current files and summarize the proposed changes. Implement only that stage; preserve all previously working functionality. Do not duplicate a feature already completed. Run or add tests and report exact outcomes. Keep the primary UI React/Vite/TypeScript. Use deterministic rule-based analysis only. Never implement real implanted-device communication or therapy control. Keep all simulation/public-data provenance visible. Do not add trained models or model inference. Do not claim completion for features or tests that are not actually implemented or run. At the end of each stage, report: features completed, files created/changed, commands/tests and actual results, known issues, and the next prompt to run.
