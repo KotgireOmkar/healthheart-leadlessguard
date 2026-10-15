@@ -24,18 +24,31 @@ router.get('/:id', async (req: Request, res: Response) => {
   }
 });
 
-// PATCH update patient parameters (reprogramming approval)
+// PATCH update patient parameters (reprogramming approval & telemetry tuning)
 router.patch('/:id/parameters', async (req: Request, res: Response) => {
   try {
-    const { lowerRateLimit, pacingMode, refractoryPeriodMs } = req.body;
+    const { 
+      lowerRateLimit, 
+      pacingMode, 
+      refractoryPeriodMs,
+      captureThresholdVolts,
+      rWaveAmplitudeMv,
+      baselineHeartRate,
+      pacingBurdenPercent
+    } = req.body;
+    
+    const updatePayload: Record<string, any> = { updatedAt: new Date() };
+    if (lowerRateLimit !== undefined) updatePayload.lowerRateLimit = lowerRateLimit;
+    if (pacingMode !== undefined) updatePayload.pacingMode = pacingMode;
+    if (refractoryPeriodMs !== undefined) updatePayload.refractoryPeriodMs = refractoryPeriodMs;
+    if (captureThresholdVolts !== undefined) updatePayload.captureThresholdVolts = captureThresholdVolts;
+    if (rWaveAmplitudeMv !== undefined) updatePayload.rWaveAmplitudeMv = rWaveAmplitudeMv;
+    if (baselineHeartRate !== undefined) updatePayload.baselineHeartRate = baselineHeartRate;
+    if (pacingBurdenPercent !== undefined) updatePayload.pacingBurdenPercent = pacingBurdenPercent;
+
     const patient = await Patient.findOneAndUpdate(
       { patientId: req.params.id },
-      { 
-        ...(lowerRateLimit !== undefined && { lowerRateLimit }),
-        ...(pacingMode !== undefined && { pacingMode }),
-        ...(refractoryPeriodMs !== undefined && { refractoryPeriodMs }),
-        updatedAt: new Date(),
-      },
+      updatePayload,
       { new: true }
     );
     if (!patient) return res.status(404).json({ error: 'Patient not found' });

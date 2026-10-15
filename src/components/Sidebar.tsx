@@ -37,7 +37,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
     { id: 'home', label: 'Home', icon: <Home size={18} /> },
     { id: 'live-monitoring', label: 'Live Monitoring', icon: <Activity size={18} /> },
     { id: 'trends', label: 'Trends & Analytics', icon: <TrendingUp size={18} /> },
-    { id: 'ai-analytics', label: 'AI Analytics', icon: <BrainCircuit size={18} /> },
+    { id: 'ai-analytics', label: 'Analytics', icon: <BrainCircuit size={18} /> },
     { id: 'research', label: 'Research Lab', icon: <FlaskConical size={18} /> },
     { id: 'security', label: 'Security Center', icon: <Lock size={18} /> },
     { id: 'battery-model', label: 'Battery Model', icon: <Battery size={18} /> },

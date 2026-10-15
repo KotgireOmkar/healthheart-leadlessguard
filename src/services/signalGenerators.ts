@@ -98,8 +98,29 @@ export class BiosignalSimulator {
       }
       ppg += (Math.random() - 0.5) * 0.02;
 
-      // SpO2 saturation trend (baseline 98%)
-      const spo2 = 98 + 0.4 * Math.sin(2 * Math.PI * 0.2 * t) + (Math.random() - 0.5) * 0.1;
+      // SpO2 Photoplethysmogram (Pleth Wave) matching clinical pulse oximetry
+      // Normalized pulse wave with systolic peak, dicrotic notch, and diastolic rebound
+      const plethPhase = (beatPhase + 0.76) % 1.0;
+      let spo2Pleth = 0;
+      if (plethPhase < 0.20) {
+        // Rapid systolic upstroke to peak
+        spo2Pleth = Math.sin((plethPhase / 0.20) * (Math.PI / 2));
+      } else if (plethPhase < 0.38) {
+        // Catacrotic limb descending to dicrotic notch
+        const f = (plethPhase - 0.20) / 0.18;
+        spo2Pleth = 1.0 - 0.55 * Math.sin(f * (Math.PI / 2));
+      } else if (plethPhase < 0.54) {
+        // Diastolic rebound wave (secondary crest)
+        const f = (plethPhase - 0.38) / 0.16;
+        spo2Pleth = 0.45 + 0.18 * Math.sin(f * Math.PI);
+      } else {
+        // Diastolic runoff to baseline
+        const f = (plethPhase - 0.54) / 0.46;
+        spo2Pleth = 0.45 * Math.exp(-f * 4.5);
+      }
+      // Add subtle respiratory modulation (PVI) and clinical sensor noise
+      const respMod = 1.0 + 0.04 * Math.sin(2 * Math.PI * 0.22 * t);
+      const spo2 = Math.max(0, spo2Pleth * respMod + (Math.random() - 0.5) * 0.012);
 
       // Thoracic BIA impedance (baseline 580 Ohms modulated by tidal volume respiration)
       const bia = 580 + 15 * Math.sin(2 * Math.PI * 0.25 * t) + (Math.random() - 0.5) * 0.5;

@@ -37,9 +37,18 @@ export const LiveMonitoringView: React.FC<LiveMonitoringViewProps> = ({
   simulator.setPatientParameters(
     activePatient.baselineHeartRate, 
     activePatient.pacingBurdenPercent,
-    activePatient.patientId === 'PAT-005' ? 0.08 : 0.02
+    activePatient.patientId === 'PT-005' ? 0.08 : 0.02
   );
   const data = simulator.generateBuffer(12);
+
+  const getPersonaAlias = (fullName: string, patientId: string) => {
+    const parts = fullName.split(' ');
+    if (parts.length > 1) {
+      return parts[parts.length - 1].replace(/[^a-zA-Z0-9]/g, '');
+    }
+    const clean = patientId.replace(/[^a-zA-Z0-9]/g, '');
+    return clean.slice(-3);
+  };
 
   // Dynamic Export synthetic ECG as CSV
   const handleExportCsv = () => {
@@ -93,7 +102,7 @@ export const LiveMonitoringView: React.FC<LiveMonitoringViewProps> = ({
           >
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: p.telemetryStatus === 'ONLINE' ? '#10b981' : '#f59e0b' }} />
             <div>
-              <span className="tab-id">{p.patientId}</span> • <span className="tab-name">{p.fullName}</span>
+              <span className="tab-name" style={{ fontWeight: 800 }}>{p.fullName}</span>
             </div>
           </button>
         ))}
@@ -102,8 +111,8 @@ export const LiveMonitoringView: React.FC<LiveMonitoringViewProps> = ({
       {/* 2. Persona Header Card (Photo Match Design) */}
       <div style={{ background: '#ffffff', border: '1px solid #eaecf0', borderRadius: '22px', padding: '20px 26px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ width: 52, height: 52, borderRadius: '50%', background: '#ecfeff', border: '2px solid #a5f3fc', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0e7490', fontWeight: 800, fontSize: '1.15rem' }}>
-            <span>{activePatient.fullName.split(' ').map(n => n[0]).join('')}</span>
+          <div style={{ width: 52, height: 52, borderRadius: '50%', background: '#ecfeff', border: '2px solid #a5f3fc', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0e7490', fontWeight: 800, fontSize: '1.05rem', letterSpacing: '0.5px' }}>
+            <span>{getPersonaAlias(activePatient.fullName, activePatient.patientId)}</span>
           </div>
           <div>
             <div style={{ fontSize: '0.82rem', color: '#64748b', fontWeight: 500 }}>Electrophysiology Live Telemetry</div>

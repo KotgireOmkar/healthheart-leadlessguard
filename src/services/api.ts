@@ -5,8 +5,8 @@ const API_BASE = '/api';
 // Fallback patients in case server is starting or offline
 export const FALLBACK_PATIENTS: Patient[] = [
   {
-    patientId: 'PAT-001',
-    fullName: 'Rajesh Sharma',
+    patientId: 'PT-001',
+    fullName: 'PT-001 ABC',
     age: 64,
     gender: 'Male',
     implantDate: '2024-03-15',
@@ -27,8 +27,8 @@ export const FALLBACK_PATIENTS: Patient[] = [
     activeScenario: 'SCENARIO_D',
   },
   {
-    patientId: 'PAT-002',
-    fullName: 'Anita Desai',
+    patientId: 'PT-002',
+    fullName: 'PT-002-XYZ',
     age: 71,
     gender: 'Female',
     implantDate: '2023-11-20',
@@ -49,17 +49,17 @@ export const FALLBACK_PATIENTS: Patient[] = [
     activeScenario: 'SCENARIO_A',
   },
   {
-    patientId: 'PAT-003',
-    fullName: 'Vikram Patel',
+    patientId: 'PT-003',
+    fullName: 'PT-003-LMN',
     age: 58,
     gender: 'Male',
     implantDate: '2024-06-02',
     deviceModel: 'LeadlessGuard-VR Pro',
     serialNumber: 'SN-7729-BX',
-    rhythmProfile: 'Intermittent AV Conduction',
-    baselineHeartRate: 68,
+    rhythmProfile: 'Sinus Bradycardia (<50 BPM Mild Alert)',
+    baselineHeartRate: 46,
     pacingBurdenPercent: 44,
-    lowerRateLimit: 60,
+    lowerRateLimit: 45,
     refractoryPeriodMs: 250,
     captureThresholdVolts: 0.55,
     leadImpedanceOhms: 595,
@@ -71,17 +71,17 @@ export const FALLBACK_PATIENTS: Patient[] = [
     activeScenario: 'SCENARIO_B',
   },
   {
-    patientId: 'PAT-004',
-    fullName: 'Priya Nair',
+    patientId: 'PT-004',
+    fullName: 'PT-004-PQR',
     age: 69,
     gender: 'Female',
     implantDate: '2023-08-14',
     deviceModel: 'LeadlessGuard-VR Pro',
     serialNumber: 'SN-6392-CX',
-    rhythmProfile: 'Sinus Node Dysfunction / Bradycardia',
-    baselineHeartRate: 60,
+    rhythmProfile: 'Severe Sinus Arrest (<40 BPM Urgent Dispatch)',
+    baselineHeartRate: 36,
     pacingBurdenPercent: 82,
-    lowerRateLimit: 60,
+    lowerRateLimit: 35,
     refractoryPeriodMs: 250,
     captureThresholdVolts: 0.5,
     leadImpedanceOhms: 570,
@@ -93,8 +93,8 @@ export const FALLBACK_PATIENTS: Patient[] = [
     activeScenario: 'SCENARIO_C',
   },
   {
-    patientId: 'PAT-005',
-    fullName: 'Sunita Verma',
+    patientId: 'PT-005',
+    fullName: 'PT-005-DEF',
     age: 62,
     gender: 'Female',
     implantDate: '2024-01-10',
@@ -151,8 +151,16 @@ export const api = {
     }
   },
 
-  // Update parameters (Approval gate)
-  async updatePatientParameters(id: string, params: { lowerRateLimit?: number; pacingMode?: string; refractoryPeriodMs?: number }): Promise<Patient> {
+  // Update parameters (Approval gate & telemetry slicer tuning)
+  async updatePatientParameters(id: string, params: { 
+    lowerRateLimit?: number; 
+    pacingMode?: string; 
+    refractoryPeriodMs?: number;
+    captureThresholdVolts?: number;
+    rWaveAmplitudeMv?: number;
+    baselineHeartRate?: number;
+    pacingBurdenPercent?: number;
+  }): Promise<Patient> {
     try {
       const res = await fetch(`${API_BASE}/patients/${id}/parameters`, {
         method: 'PATCH',
@@ -178,8 +186,8 @@ export const api = {
       return [
         {
           alertId: 'ALT-1001',
-          patientId: 'PAT-005',
-          patientName: 'Sunita Verma',
+          patientId: 'PT-005',
+          patientName: 'PT-005-DEF',
           severity: 'WARNING',
           ruleIdentifier: 'RULE_IMPEDANCE_THRESHOLD_EXCEEDED',
           title: 'Elevated Lead Impedance Detected',
@@ -191,8 +199,8 @@ export const api = {
         },
         {
           alertId: 'ALT-1002',
-          patientId: 'PAT-002',
-          patientName: 'Anita Desai',
+          patientId: 'PT-002',
+          patientName: 'PT-002-XYZ',
           severity: 'ADVISORY',
           ruleIdentifier: 'RULE_HIGH_PACING_BURDEN_V1',
           title: 'Sustained Ventricular Pacing (100%)',

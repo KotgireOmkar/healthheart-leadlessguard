@@ -8,8 +8,13 @@ import {
   Bell,
   Play, 
   Pause, 
-  Bluetooth
+  Bluetooth,
+  AlertTriangle,
+  ShieldAlert,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
+import { alertAudio } from '../../services/alertAudio';
 
 interface PatientCompanionViewProps {
   patient: Patient;
@@ -19,7 +24,16 @@ export const PatientCompanionView: React.FC<PatientCompanionViewProps> = ({ pati
   const [isPlayingStrip, setIsPlayingStrip] = useState(true);
   const [lastSynced, setLastSynced] = useState('2 minutes ago');
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isPatientAudioMuted, setIsPatientAudioMuted] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  // Trigger alert audio and checks for patient
+  useEffect(() => {
+    alertAudio.checkAndTriggerAlert(patient.baselineHeartRate);
+    return () => {
+      alertAudio.stopAlertAudio();
+    };
+  }, [patient.baselineHeartRate, patient.patientId]);
 
   // Handle Mock Bluetooth Check-in
   const handleSyncCheckin = () => {
@@ -128,8 +142,8 @@ export const PatientCompanionView: React.FC<PatientCompanionViewProps> = ({ pati
       <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '18px', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.03)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           {/* Avatar with initials or photo placeholder */}
-          <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#dbeafe', border: '2px solid #93c5fd', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1e40af', fontWeight: 800, fontSize: '1rem', overflow: 'hidden' }}>
-            <span>{patient.fullName.split(' ').map(n => n[0]).join('')}</span>
+          <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#dbeafe', border: '2px solid #93c5fd', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1e40af', fontWeight: 800, fontSize: '0.95rem', overflow: 'hidden' }}>
+            <span>{patient.fullName.split(' ').length > 1 ? patient.fullName.split(' ')[patient.fullName.split(' ').length - 1].replace(/[^a-zA-Z0-9]/g, '') : patient.patientId}</span>
           </div>
           <div>
             <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 500 }}>Welcome,</div>
@@ -140,22 +154,119 @@ export const PatientCompanionView: React.FC<PatientCompanionViewProps> = ({ pati
         {/* Notification Bell with Badge */}
         <div style={{ position: 'relative', cursor: 'pointer', padding: '6px' }}>
           <Bell size={20} color="#0f172a" />
-          <span style={{ position: 'absolute', top: 5, right: 5, width: 8, height: 8, borderRadius: '50%', background: '#ef4444', border: '2px solid #ffffff' }} />
+          <span style={{ position: 'absolute', top: 5, right: 5, width: 8, height: 8, borderRadius: '50%', background: patient.baselineHeartRate < 50 ? '#ea580c' : '#10b981', border: '2px solid #ffffff' }} />
         </div>
       </div>
 
-      {/* Status Pills Row */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+      {/* Status Pills Row with ALERT Button */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+        {/* Patient ALERT Status Pill */}
+        <div
+          style={{
+            background: patient.baselineHeartRate < 30 ? '#fee2e2' : patient.baselineHeartRate < 40 ? '#ffedd5' : patient.baselineHeartRate < 50 ? '#fef3c7' : '#ecfdf5',
+            border: `1.5px solid ${patient.baselineHeartRate < 30 ? '#ef4444' : patient.baselineHeartRate < 40 ? '#f97316' : patient.baselineHeartRate < 50 ? '#f59e0b' : '#10b981'}`,
+            borderRadius: '9999px',
+            padding: '6px 14px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            fontSize: '0.78rem',
+            fontWeight: 800,
+            color: patient.baselineHeartRate < 30 ? '#b91c1c' : patient.baselineHeartRate < 40 ? '#c2410c' : patient.baselineHeartRate < 50 ? '#b45309' : '#15803d',
+          }}
+        >
+          <AlertTriangle size={14} />
+          <span>
+            {patient.baselineHeartRate < 30 ? 'Severe Alert' : patient.baselineHeartRate < 40 ? 'Urgent Alert (<40)' : patient.baselineHeartRate < 50 ? 'Mild Alert (<50)' : 'Safe (Normal)'}
+          </span>
+        </div>
+
         <div className="badge-emerald" style={{ padding: '6px 14px', fontSize: '0.78rem' }}>
           <CheckCircle2 size={15} color="#059669" />
-          <span>Leadless Pacemaker Active</span>
+          <span>Pacemaker Active</span>
         </div>
 
         <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '9999px', padding: '6px 14px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', fontWeight: 700, color: '#0f172a', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
           <Battery size={15} color="#059669" />
-          <span>{patient.batteryLongevityYears} Years Remaining</span>
+          <span>{patient.batteryLongevityYears} Yrs</span>
         </div>
       </div>
+
+      {/* Patient Urgent Alert Notification Card (<40 BPM) */}
+      {patient.baselineHeartRate < 40 && (
+        <div style={{
+          background: '#fff7ed',
+          border: '2px solid #ea580c',
+          borderRadius: '18px',
+          padding: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '10px',
+          boxShadow: '0 4px 14px rgba(234, 88, 12, 0.25)'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#c2410c', fontWeight: 800, fontSize: '0.88rem' }}>
+              <ShieldAlert size={18} />
+              <span>URGENT MEDICAL ALERT (&lt;40 BPM)</span>
+            </div>
+            <button
+              onClick={() => {
+                const nextMuted = !isPatientAudioMuted;
+                setIsPatientAudioMuted(nextMuted);
+                alertAudio.setMuted(nextMuted);
+              }}
+              style={{ background: '#ffffff', border: '1px solid #fed7aa', borderRadius: '6px', padding: '3px 8px', fontSize: '0.7rem', fontWeight: 700, color: '#c2410c', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+            >
+              {isPatientAudioMuted ? <VolumeX size={12} /> : <Volume2 size={12} />}
+              {isPatientAudioMuted ? 'Muted' : 'Alarm Live'}
+            </button>
+          </div>
+          <div style={{ fontSize: '0.86rem', color: '#7c2d12', lineHeight: 1.45, fontWeight: 600 }}>
+            Your heart rate is below 40 BPM (currently <strong>{patient.baselineHeartRate} BPM</strong>)! Please sit down or lie down immediately and stay calm. Your clinician has been urgently notified to call you to the hospital or dispatch assistance.
+          </div>
+          <a
+            href="tel:911"
+            style={{
+              background: '#ea580c',
+              color: '#ffffff',
+              textDecoration: 'none',
+              borderRadius: '10px',
+              padding: '10px',
+              fontWeight: 800,
+              fontSize: '0.82rem',
+              textAlign: 'center',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              cursor: 'pointer'
+            }}
+          >
+            <PhoneCall size={14} /> Call Hospital Emergency Line
+          </a>
+        </div>
+      )}
+
+      {/* Patient Mild Alert Advisory Card (<50 BPM) */}
+      {patient.baselineHeartRate < 50 && patient.baselineHeartRate >= 40 && (
+        <div style={{
+          background: '#fffbeb',
+          border: '1.5px solid #f59e0b',
+          borderRadius: '16px',
+          padding: '14px 18px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '6px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#b45309', fontWeight: 800, fontSize: '0.82rem' }}>
+            <AlertTriangle size={16} />
+            <span>Mild Heart Rate Alert (&lt;50 BPM)</span>
+          </div>
+          <div style={{ fontSize: '0.82rem', color: '#92400e', lineHeight: 1.4 }}>
+            Your heart rate is <strong>{patient.baselineHeartRate} BPM</strong> (below 50 BPM). Please sit down, rest, and keep your phone nearby. Your pacemaker is actively monitoring your rhythm.
+          </div>
+        </div>
+      )}
 
       {/* 2. Heart Rate Card with Radial Glowing Beating Heart (Direct Match to Photo) */}
       <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '22px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>

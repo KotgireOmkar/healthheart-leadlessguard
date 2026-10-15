@@ -98,6 +98,7 @@ export const App: React.FC = () => {
                   onSelectPatient={setActivePatient}
                   alerts={alerts}
                   onNavigateTab={setActiveTab}
+                  onPatientUpdated={handlePatientUpdated}
                 />
               )}
               {activeTab === 'live-monitoring' && (
@@ -108,7 +109,11 @@ export const App: React.FC = () => {
                 />
               )}
               {activeTab === 'trends' && (
-                <TrendsAnalyticsView activePatient={activePatient} />
+                <TrendsAnalyticsView 
+                  patients={patients}
+                  activePatient={activePatient} 
+                  onSelectPatient={setActivePatient}
+                />
               )}
               {activeTab === 'ai-analytics' && (
                 <AiAnalyticsView activePatient={activePatient} />

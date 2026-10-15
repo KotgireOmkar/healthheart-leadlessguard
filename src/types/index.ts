@@ -20,6 +20,7 @@ export interface Patient {
   signalQualityIndex: number;
   telemetryStatus: 'ONLINE' | 'STANDBY' | 'WARNING';
   activeScenario: string;
+  spo2?: number;
 }
 
 export interface TelemetryPacket {

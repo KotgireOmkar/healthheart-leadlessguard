@@ -196,7 +196,7 @@ export const VerificationSuiteView: React.FC = () => {
       id: 'UI-02',
       category: 'UI',
       title: 'Patient Switcher Context Switching',
-      assertion: 'Selecting PAT-002 immediately updates baseline parameters to 48 BPM and 85% pacing',
+      assertion: 'Selecting PT-002 immediately updates baseline parameters to 48 BPM and 85% pacing',
       expectedResult: 'CONTEXT_SYNCED',
       durationMs: 4,
       status: 'PASS'

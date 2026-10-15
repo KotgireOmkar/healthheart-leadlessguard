@@ -85,11 +85,6 @@ export const ResearchWorkspaceView: React.FC<ResearchWorkspaceViewProps> = ({
             <CheckCircle2 size={16} />
             <span>8 Scenarios Loaded</span>
           </div>
-
-          <div style={{ background: '#ffffff', border: '1px solid #eaecf0', borderRadius: '9999px', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: 700, color: '#0f172a', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
-            <Sparkles size={16} color="#2563eb" />
-            <span>Transformer Lab Active</span>
-          </div>
         </div>
       </div>
 

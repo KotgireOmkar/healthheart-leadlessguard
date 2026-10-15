@@ -150,7 +150,7 @@ export const AiAnalyticsView: React.FC<AiAnalyticsViewProps> = ({ activePatient 
   const handleExportAiReport = () => {
     const reportData = {
       model: 'HeartGPT v2.4 Multi-Head Attention',
-      targetPatient: activePatient ? activePatient.fullName : 'Rajesh Sharma',
+      targetPatient: activePatient ? activePatient.fullName : 'PT-001 ABC',
       dominantRhythm: activePattern.name,
       confidencePct: activePattern.confidencePct,
       featuresExtracted: features,
@@ -161,7 +161,7 @@ export const AiAnalyticsView: React.FC<AiAnalyticsViewProps> = ({ activePatient 
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `leadlessguard_ai_findings_report.json`);
+    link.setAttribute('download', `leadlessguard_findings_report.json`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -177,7 +177,7 @@ export const AiAnalyticsView: React.FC<AiAnalyticsViewProps> = ({ activePatient 
             <BrainCircuit size={26} />
           </div>
           <div>
-            <div style={{ fontSize: '0.82rem', color: '#64748b', fontWeight: 500 }}>AI Decision Support & Arrhythmia Inference</div>
+            <div style={{ fontSize: '0.82rem', color: '#64748b', fontWeight: 500 }}>Electrophysiology Analytics &amp; Decision Support</div>
             <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0f172a', lineHeight: 1.2 }}>
               HeartGPT™ Multimodal Cardiac Classifier
             </h2>
@@ -196,11 +196,6 @@ export const AiAnalyticsView: React.FC<AiAnalyticsViewProps> = ({ activePatient 
           <div className="badge-emerald" style={{ padding: '8px 16px', fontSize: '0.8rem' }}>
             <CheckCircle2 size={16} />
             <span>Multi-Channel Preprocessed</span>
-          </div>
-
-          <div style={{ background: '#ffffff', border: '1px solid #eaecf0', borderRadius: '9999px', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: 700, color: '#0f172a', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
-            <ShieldCheck size={16} color="#2563eb" />
-            <span>Strict Read-Only Boundary Enforced</span>
           </div>
         </div>
       </div>
